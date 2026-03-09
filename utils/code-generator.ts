@@ -316,6 +316,39 @@ function generateCompleteCode(params: CodeGenerationParams) {
     if (fontFamily === "sans") fontFamily = "ui-sans-serif, system-ui, sans-serif";
     else if (fontFamily === "serif") fontFamily = "ui-serif, Georgia, serif";  
     else if (fontFamily === "mono") fontFamily = "ui-monospace, monospace";
+    else if (fontFamily !== "inherit") {
+      // Google Font key — output the actual font name for generated code
+      const googleFontNames: Record<string, string> = {
+        inter: "'Inter'", roboto: "'Roboto'", openSans: "'Open Sans'", lato: "'Lato'",
+        montserrat: "'Montserrat'", poppins: "'Poppins'", nunito: "'Nunito'", raleway: "'Raleway'",
+        workSans: "'Work Sans'", dmSans: "'DM Sans'", outfit: "'Outfit'",
+        plusJakartaSans: "'Plus Jakarta Sans'", spaceGrotesk: "'Space Grotesk'",
+        urbanist: "'Urbanist'", quicksand: "'Quicksand'", rubik: "'Rubik'",
+        karla: "'Karla'", manrope: "'Manrope'", lexend: "'Lexend'", cabin: "'Cabin'",
+        mulish: "'Mulish'", nunitoSans: "'Nunito Sans'", josefinSans: "'Josefin Sans'",
+        titilliumWeb: "'Titillium Web'", exo2: "'Exo 2'", figtree: "'Figtree'",
+        sora: "'Sora'", archivo: "'Archivo'",
+        playfairDisplay: "'Playfair Display'", merriweather: "'Merriweather'", lora: "'Lora'",
+        crimsonText: "'Crimson Text'", ebGaramond: "'EB Garamond'",
+        libreBaskerville: "'Libre Baskerville'", cormorantGaramond: "'Cormorant Garamond'",
+        bitter: "'Bitter'", sourceSerif4: "'Source Serif 4'", dmSerif: "'DM Serif Display'",
+        notoSerif: "'Noto Serif'", vollkorn: "'Vollkorn'", spectral: "'Spectral'",
+        jetbrainsMono: "'JetBrains Mono'", firaCode: "'Fira Code'",
+        sourceCodePro: "'Source Code Pro'", spaceMono: "'Space Mono'",
+        ibmPlexMono: "'IBM Plex Mono'", robotoMono: "'Roboto Mono'",
+        inconsolata: "'Inconsolata'",
+        oswald: "'Oswald'", bebasNeue: "'Bebas Neue'", anton: "'Anton'",
+        righteous: "'Righteous'", comfortaa: "'Comfortaa'", fredoka: "'Fredoka'",
+        abrilFatface: "'Abril Fatface'", alfaSlabOne: "'Alfa Slab One'",
+        permanentMarker: "'Permanent Marker'", pressStart2P: "'Press Start 2P'",
+        bungee: "'Bungee'", bungeeShade: "'Bungee Shade'", silkscreen: "'Silkscreen'",
+        blackOpsOne: "'Black Ops One'",
+        pacifico: "'Pacifico'", dancingScript: "'Dancing Script'", caveat: "'Caveat'",
+        satisfy: "'Satisfy'", greatVibes: "'Great Vibes'", lobster: "'Lobster'",
+        sacramento: "'Sacramento'", indieFlower: "'Indie Flower'", kalam: "'Kalam'",
+      };
+      fontFamily = googleFontNames[fontFamily] || fontFamily;
+    }
     if (fontFamily !== "inherit") {
       styles.fontFamily = fontFamily;
     }

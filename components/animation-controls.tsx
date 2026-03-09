@@ -1,13 +1,10 @@
-
 "use client"
 
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
 import type { AnimationConfig } from "@/types/animation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 
 interface AnimationControlsProps {
   config: AnimationConfig
@@ -28,196 +25,264 @@ const easingOptions = [
 ]
 
 const filterOptions = [
-  { value: "blur", label: "Blur", unit: "px" },
-  { value: "brightness", label: "Brightness", unit: "%" },
-  { value: "contrast", label: "Contrast", unit: "%" },
-  { value: "saturate", label: "Saturate", unit: "%" },
+  { value: "blur", label: "Blur", unit: "px", min: 0, max: 50, step: 0.5 },
+  { value: "brightness", label: "Brightness", unit: "%", min: 0, max: 300, step: 1 },
+  { value: "contrast", label: "Contrast", unit: "%", min: 0, max: 300, step: 1 },
+  { value: "saturate", label: "Saturate", unit: "%", min: 0, max: 300, step: 1 },
 ]
 
-// Reusable number input change handler
-function createNumberHandler(
-  allowNegative: boolean,
-  onValid: (num: number) => void,
-  setLocal: (v: string) => void,
-  isInt = false
-) {
-  return (value: string) => {
-    setLocal(value)
-    if (value === "" || value === "-" || value === "." || value === "-.") return
-    if (/^\d+\.$/.test(value) || /^-\d+\.$/.test(value)) return
-    const pattern = allowNegative ? /^-?\d*\.?\d*$/ : /^\d*\.?\d*$/
-    if (!pattern.test(value) || !/\d/.test(value)) return
-    const num = isInt ? parseInt(value) : parseFloat(value)
-    if (isNaN(num)) return
-    if (!allowNegative && num < 0) return
-    onValid(num)
-  }
+// ── Figma-style slider + number input ─────────────────────────────────────────
+interface SliderFieldProps {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (n: number) => void
+  suffix?: string
+  className?: string
 }
 
-export default function AnimationControls({ config, onChange }: AnimationControlsProps) {
-  const [xUnit, setXUnit] = useState<"px" | "%">("px")
-  const [yUnit, setYUnit] = useState<"px" | "%">("px")
-  const [xVal, setXVal] = useState("")
-  const [yVal, setYVal] = useState("")
-  const [scaleVal, setScaleVal] = useState("")
-  const [rotVal, setRotVal] = useState("")
-  const [opVal, setOpVal] = useState("")
-  const [durVal, setDurVal] = useState("")
-  const [delayVal, setDelayVal] = useState("")
-  const [repeatVal, setRepeatVal] = useState("")
-  const [filterVal, setFilterVal] = useState("")
-  
-  // From values
-  const [fromXUnit, setFromXUnit] = useState<"px" | "%">("px")
-  const [fromYUnit, setFromYUnit] = useState<"px" | "%">("px")
-  const [fromXVal, setFromXVal] = useState("")
-  const [fromYVal, setFromYVal] = useState("")
-  const [fromScaleVal, setFromScaleVal] = useState("")
-  const [fromRotVal, setFromRotVal] = useState("")
-  const [fromOpVal, setFromOpVal] = useState("")
-  const [fromFilterVal, setFromFilterVal] = useState("")
+function SliderField({ label, value, min, max, step, onChange, suffix, className = "" }: SliderFieldProps) {
+  const [str, setStr] = useState(String(value))
+  const focused = useRef(false)
 
-  // Sync local state from config
+  // Sync from outside only when not actively editing
   useEffect(() => {
-    const parseUnit = (v: any): [string, "px" | "%"] => {
-      if (typeof v === "string") {
-        const isP = v.includes("%")
-        return [v.replace(/[^\d.-]/g, "") || "", isP ? "%" : "px"]
-      }
-      return [v === 0 ? "" : String(v), "px"]
-    }
+    if (!focused.current) setStr(String(value))
+  }, [value])
 
-    const [xv, xu] = parseUnit(config.x)
-    setXVal(xv === "0" ? "" : xv); setXUnit(xu)
-    const [yv, yu] = parseUnit(config.y)
-    setYVal(yv === "0" ? "" : yv); setYUnit(yu)
+  const safe = isNaN(value) ? min : value
+  const clamped = Math.min(max, Math.max(min, safe))
+  const pct = max === min ? 0 : ((clamped - min) / (max - min)) * 100
 
-    setScaleVal(config.scale === 1 ? "" : String(config.scale))
-    setRotVal(config.rotation === 0 ? "" : String(config.rotation))
-    setOpVal(config.opacity === 1 ? "" : String(config.opacity))
-    setDurVal(config.duration === 1 ? "" : String(config.duration))
-    setDelayVal(config.delay === 0 ? "" : String(config.delay))
-    setRepeatVal(config.repeat === 0 ? "" : String(config.repeat))
-    setFilterVal(config.filter?.value === 0 ? "" : String(config.filter?.value || ""))
+  return (
+    <div className={`space-y-1 ${className}`}>
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] text-muted-foreground">{label}</Label>
+        {suffix && <span className="text-[10px] text-muted-foreground/60">{suffix}</span>}
+      </div>
+      <div className="flex items-center gap-2.5">
+        <div className="relative flex-1 h-8 flex items-center">
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={clamped}
+            onChange={(e) => onChange(parseFloat(e.target.value))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          />
+          {/* Custom track */}
+          <div className="w-full h-[4px] rounded-full relative pointer-events-none" style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--muted)) ${pct}%)` }}>
+            {/* Custom thumb */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-[14px] h-[14px] rounded-full bg-primary border-2 border-background shadow-md pointer-events-none transition-[left] duration-75"
+              style={{ left: `calc(${pct}% - 7px)` }}
+            />
+          </div>
+        </div>
+        <input
+          type="number"
+          step={step}
+          value={str}
+          onFocus={() => { focused.current = true }}
+          onChange={(e) => {
+            setStr(e.target.value)
+            const n = parseFloat(e.target.value)
+            if (!isNaN(n)) onChange(n)
+          }}
+          onBlur={() => {
+            focused.current = false
+            const n = parseFloat(str)
+            if (!isNaN(n)) {
+              const c = Math.min(max, Math.max(min, n))
+              onChange(c)
+              setStr(String(c))
+            } else {
+              setStr(String(value))
+            }
+          }}
+          className="w-[54px] h-8 text-center text-[11px] bg-muted/50 border border-input rounded-md
+            px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/60
+            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+      </div>
+    </div>
+  )
+}
 
-    if (config.fromValues) {
-      const [fxv, fxu] = parseUnit(config.fromValues.x)
-      setFromXVal(fxv === "0" ? "" : fxv); setFromXUnit(fxu)
-      const [fyv, fyu] = parseUnit(config.fromValues.y)
-      setFromYVal(fyv === "0" ? "" : fyv); setFromYUnit(fyu)
-      setFromScaleVal(config.fromValues.scale === 1 ? "" : String(config.fromValues.scale || ""))
-      setFromRotVal(config.fromValues.rotation === 0 ? "" : String(config.fromValues.rotation || ""))
-      setFromOpVal(config.fromValues.opacity === 1 ? "" : String(config.fromValues.opacity || ""))
-      setFromFilterVal(config.fromValues.filter?.value === 0 ? "" : String(config.fromValues.filter?.value || ""))
-    } else {
-      setFromXVal(""); setFromYVal(""); setFromScaleVal(""); setFromRotVal(""); setFromOpVal(""); setFromFilterVal("")
-    }
-  }, [config])
+// ── Position field: slider + input + px/% toggle ──────────────────────────────
+interface PosSliderFieldProps {
+  label: string
+  value: number | string
+  unit: "px" | "%"
+  onUnitChange: (u: "px" | "%") => void
+  onChange: (v: number | string) => void
+}
 
-  const set = (key: keyof AnimationConfig, value: any) => onChange({ ...config, [key]: value })
-  const setFrom = (key: string, value: any) => onChange({ ...config, fromValues: { ...config.fromValues, [key]: value } })
+function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSliderFieldProps) {
+  const numVal = typeof value === "string"
+    ? (parseFloat(value.replace(/[^\d.-]/g, "")) || 0)
+    : (value ?? 0)
+  const min = unit === "%" ? -200 : -500
+  const max = unit === "%" ? 200 : 500
+  const step = unit === "%" ? 0.5 : 1
 
-  const handleXChange = createNumberHandler(true, (n) => set("x", xUnit === "%" ? `${n}%` : n), setXVal)
-  const handleYChange = createNumberHandler(true, (n) => set("y", yUnit === "%" ? `${n}%` : n), setYVal)
-  const handleFromXChange = createNumberHandler(true, (n) => setFrom("x", fromXUnit === "%" ? `${n}%` : n), setFromXVal)
-  const handleFromYChange = createNumberHandler(true, (n) => setFrom("y", fromYUnit === "%" ? `${n}%` : n), setFromYVal)
+  const [str, setStr] = useState(String(numVal))
+  const focused = useRef(false)
 
-  const handleXUnitChange = (u: "px" | "%") => {
-    setXUnit(u)
-    const v = xVal === "" ? 0 : parseFloat(xVal)
-    set("x", u === "%" ? `${v}%` : v)
-  }
-  const handleYUnitChange = (u: "px" | "%") => {
-    setYUnit(u)
-    const v = yVal === "" ? 0 : parseFloat(yVal)
-    set("y", u === "%" ? `${v}%` : v)
-  }
-  const handleFromXUnitChange = (u: "px" | "%") => {
-    setFromXUnit(u)
-    const v = fromXVal === "" ? 0 : parseFloat(fromXVal)
-    setFrom("x", u === "%" ? `${v}%` : v)
-  }
-  const handleFromYUnitChange = (u: "px" | "%") => {
-    setFromYUnit(u)
-    const v = fromYVal === "" ? 0 : parseFloat(fromYVal)
-    setFrom("y", u === "%" ? `${v}%` : v)
-  }
+  useEffect(() => {
+    if (!focused.current) setStr(String(numVal))
+  }, [numVal])
 
-  const getFilterUnit = () => filterOptions.find(f => f.value === (config.filter?.type || "blur"))?.unit || "px"
+  const safe = isNaN(numVal) ? 0 : numVal
+  const clamped = Math.min(max, Math.max(min, safe))
+  const pct = ((clamped - min) / (max - min)) * 100
 
-  // Compact input with label
-  const Field = ({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) => (
+  const commit = (n: number) => onChange(unit === "%" ? `${n}%` : n)
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] text-muted-foreground">{label}</Label>
+        <div className="flex border border-input rounded overflow-hidden leading-none">
+          <button
+            type="button"
+            onClick={() => { onUnitChange("px"); onChange(numVal) }}
+            className={`px-1.5 py-[2px] text-[10px] transition-colors ${unit === "px" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+          >px</button>
+          <button
+            type="button"
+            onClick={() => { onUnitChange("%"); onChange(`${numVal}%`) }}
+            className={`px-1.5 py-[2px] text-[10px] border-l border-input transition-colors ${unit === "%" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+          >%</button>
+        </div>
+      </div>
+      <div className="flex items-center gap-2.5">
+        <div className="relative flex-1 h-8 flex items-center">
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={clamped}
+            onChange={(e) => commit(parseFloat(e.target.value))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          />
+          {/* Custom track */}
+          <div className="w-full h-[4px] rounded-full relative pointer-events-none" style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--muted)) ${pct}%)` }}>
+            {/* Custom thumb */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-[14px] h-[14px] rounded-full bg-primary border-2 border-background shadow-md pointer-events-none transition-[left] duration-75"
+              style={{ left: `calc(${pct}% - 7px)` }}
+            />
+          </div>
+        </div>
+        <input
+          type="number"
+          step={step}
+          value={str}
+          onFocus={() => { focused.current = true }}
+          onChange={(e) => {
+            setStr(e.target.value)
+            const n = parseFloat(e.target.value)
+            if (!isNaN(n)) commit(n)
+          }}
+          onBlur={() => {
+            focused.current = false
+            const n = parseFloat(str)
+            if (!isNaN(n)) {
+              const c = Math.min(max, Math.max(min, n))
+              commit(c)
+              setStr(String(c))
+            } else {
+              setStr(String(numVal))
+            }
+          }}
+          className="w-[54px] h-8 text-center text-[11px] bg-muted/50 border border-input rounded-md
+            px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/60
+            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── Label + content wrapper ───────────────────────────────────────────────────
+function Field({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
+  return (
     <div className={className}>
       <Label className="text-[11px] text-muted-foreground mb-1 block">{label}</Label>
       {children}
     </div>
   )
+}
 
-  // Unit toggle button pair
-  const UnitToggle = ({ unit, onChange: onU }: { unit: "px" | "%"; onChange: (u: "px" | "%") => void }) => (
-    <div className="flex shrink-0">
-      <Button variant={unit === "px" ? "default" : "outline"} size="sm" className="h-8 px-2 text-[10px] rounded-r-none" onClick={() => onU("px")}>px</Button>
-      <Button variant={unit === "%" ? "default" : "outline"} size="sm" className="h-8 px-2 text-[10px] rounded-l-none" onClick={() => onU("%")}>%</Button>
-    </div>
-  )
+// ── Full property grid (X, Y, Scale, Rotation, Opacity, Filter) ──────────────
+interface PropGridProps {
+  xVal: number | string; xUnit: "px" | "%"; onXUnit: (u: "px" | "%") => void; onX: (v: number | string) => void
+  yVal: number | string; yUnit: "px" | "%"; onYUnit: (u: "px" | "%") => void; onY: (v: number | string) => void
+  scale: number; onScale: (n: number) => void
+  rotation: number; onRot: (n: number) => void
+  opacity: number; onOp: (n: number) => void
+  filterType: string; onFilterType: (t: string) => void
+  filterVal: number; onFilterVal: (n: number) => void
+}
 
-  // Position + unit input
-  const PosField = ({ label, val, onChange: onC, unit, onUnitChange }: { label: string; val: string; onChange: (v: string) => void; unit: "px" | "%"; onUnitChange: (u: "px" | "%") => void }) => (
-    <Field label={label}>
-      <div className="flex gap-1">
-        <Input type="text" value={val} onChange={(e) => onC(e.target.value)} className="h-8 text-xs flex-1 min-w-0" placeholder="0" />
-        <UnitToggle unit={unit} onChange={onUnitChange} />
+function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale, onScale, rotation, onRot, opacity, onOp, filterType, onFilterType, filterVal, onFilterVal }: PropGridProps) {
+  const filterOpt = filterOptions.find(f => f.value === filterType) || filterOptions[0]
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <PosSliderField label="X" value={xVal} unit={xUnit} onUnitChange={onXUnit} onChange={onX} />
+        <PosSliderField label="Y" value={yVal} unit={yUnit} onUnitChange={onYUnit} onChange={onY} />
       </div>
-    </Field>
-  )
-
-  const renderPropertyGrid = (
-    xv: string, xC: (v: string) => void, xu: "px" | "%", xU: (u: "px" | "%") => void,
-    yv: string, yC: (v: string) => void, yu: "px" | "%", yU: (u: "px" | "%") => void,
-    sv: string, sC: (v: string) => void,
-    rv: string, rC: (v: string) => void,
-    ov: string, oC: (v: string) => void,
-    fv: string, fC: (v: string) => void,
-    ftChange: (t: string) => void,
-    ft: string,
-    isFrom = false
-  ) => (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <PosField label="X Position" val={xv} onChange={xC} unit={xu} onUnitChange={xU} />
-        <PosField label="Y Position" val={yv} onChange={yC} unit={yu} onUnitChange={yU} />
+      <div className="grid grid-cols-3 gap-x-3 gap-y-3">
+        <SliderField label="Scale" value={scale} min={0} max={5} step={0.05} onChange={onScale} />
+        <SliderField label="Rotation °" value={rotation} min={-360} max={360} step={1} onChange={onRot} />
+        <SliderField label="Opacity" value={opacity} min={0} max={1} step={0.01} onChange={onOp} />
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="Scale">
-          <Input type="text" value={sv} onChange={(e) => sC(e.target.value)} className="h-8 text-xs" placeholder="1" />
-        </Field>
-        <Field label="Rotation (°)">
-          <Input type="text" value={rv} onChange={(e) => rC(e.target.value)} className="h-8 text-xs" placeholder="0" />
-        </Field>
-        <Field label="Opacity">
-          <Input type="text" value={ov} onChange={(e) => oC(e.target.value)} className="h-8 text-xs" placeholder="1" />
-        </Field>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-end">
         <Field label="Filter">
-          <Select value={ft} onValueChange={ftChange}>
+          <Select value={filterType} onValueChange={onFilterType}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               {filterOptions.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </Field>
-        <Field label={`Value (${getFilterUnit()})`}>
-          <Input type="text" value={fv} onChange={(e) => fC(e.target.value)} className="h-8 text-xs" placeholder="0" />
-        </Field>
+        <SliderField
+          label={`Value (${filterOpt.unit})`}
+          value={filterVal}
+          min={filterOpt.min}
+          max={filterOpt.max}
+          step={filterOpt.step}
+          onChange={onFilterVal}
+        />
       </div>
     </div>
   )
+}
+
+export default function AnimationControls({ config, onChange }: AnimationControlsProps) {
+  const [xUnit, setXUnit] = useState<"px" | "%">("px")
+  const [yUnit, setYUnit] = useState<"px" | "%">("px")
+  const [fromXUnit, setFromXUnit] = useState<"px" | "%">("px")
+  const [fromYUnit, setFromYUnit] = useState<"px" | "%">("px")
+
+  const set = useCallback((key: keyof AnimationConfig, value: unknown) => {
+    onChange({ ...config, [key]: value })
+  }, [config, onChange])
+
+  const setFrom = useCallback((key: string, value: unknown) => {
+    onChange({ ...config, fromValues: { ...config.fromValues, [key]: value } })
+  }, [config, onChange])
 
   return (
-    <div className="space-y-4">
-      {/* Core settings */}
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-5">
+      {/* Tween type + easing */}
+      <div className="grid grid-cols-2 gap-4">
         <Field label="Tween Type">
           <Select value={config.tweenType} onValueChange={(v: "from" | "to" | "fromTo") => set("tweenType", v)}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -236,99 +301,71 @@ export default function AnimationControls({ config, onChange }: AnimationControl
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Duration (s)">
-          <Input
-            type="text" value={durVal}
-            onChange={createNumberHandler(false, (n) => set("duration", n), setDurVal)}
-            className="h-8 text-xs" placeholder="1"
-          />
-        </Field>
-        <Field label="Delay (s)">
-          <Input
-            type="text" value={delayVal}
-            onChange={createNumberHandler(false, (n) => set("delay", n), setDelayVal)}
-            className="h-8 text-xs" placeholder="0"
-          />
-        </Field>
       </div>
 
-      {/* fromTo layout */}
+      {/* Duration + Delay */}
+      <div className="grid grid-cols-2 gap-4">
+        <SliderField label="Duration (s)" value={config.duration} min={0.1} max={10} step={0.1} onChange={n => set("duration", n)} />
+        <SliderField label="Delay (s)" value={config.delay} min={0} max={5} step={0.1} onChange={n => set("delay", n)} />
+      </div>
+
+      {/* Property grid — split for fromTo, single otherwise */}
       {config.tweenType === "fromTo" ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-3">
             <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mb-3">From Values</p>
-            {renderPropertyGrid(
-              fromXVal, handleFromXChange, fromXUnit, handleFromXUnitChange,
-              fromYVal, handleFromYChange, fromYUnit, handleFromYUnitChange,
-              fromScaleVal, createNumberHandler(false, (n) => setFrom("scale", n), setFromScaleVal),
-              fromRotVal, createNumberHandler(true, (n) => setFrom("rotation", n), setFromRotVal),
-              fromOpVal, createNumberHandler(false, (n) => setFrom("opacity", n), setFromOpVal),
-              fromFilterVal,
-              (v: string) => {
-                setFromFilterVal(v)
-                if (v === "" || v === ".") return
-                if (!/^\d*\.?\d*$/.test(v) || !/\d/.test(v)) return
-                const n = parseFloat(v)
-                if (!isNaN(n) && n >= 0) setFrom("filter", { ...config.fromValues?.filter, value: n })
-              },
-              (t: string) => setFrom("filter", { type: t, value: config.fromValues?.filter?.value || 0 }),
-              config.fromValues?.filter?.type || "blur",
-              true
-            )}
+            <PropGrid
+              xVal={config.fromValues?.x ?? 0} xUnit={fromXUnit} onXUnit={setFromXUnit} onX={v => setFrom("x", v)}
+              yVal={config.fromValues?.y ?? 0} yUnit={fromYUnit} onYUnit={setFromYUnit} onY={v => setFrom("y", v)}
+              scale={config.fromValues?.scale ?? 1} onScale={n => setFrom("scale", n)}
+              rotation={config.fromValues?.rotation ?? 0} onRot={n => setFrom("rotation", n)}
+              opacity={config.fromValues?.opacity ?? 1} onOp={n => setFrom("opacity", n)}
+              filterType={config.fromValues?.filter?.type ?? "blur"}
+              onFilterType={t => setFrom("filter", { type: t, value: config.fromValues?.filter?.value ?? 0 })}
+              filterVal={config.fromValues?.filter?.value ?? 0}
+              onFilterVal={n => setFrom("filter", { type: config.fromValues?.filter?.type ?? "blur", value: n })}
+            />
           </div>
-
           <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 p-3">
             <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-3">To Values</p>
-            {renderPropertyGrid(
-              xVal, handleXChange, xUnit, handleXUnitChange,
-              yVal, handleYChange, yUnit, handleYUnitChange,
-              scaleVal, createNumberHandler(false, (n) => set("scale", n), setScaleVal),
-              rotVal, createNumberHandler(true, (n) => set("rotation", n), setRotVal),
-              opVal, createNumberHandler(false, (n) => set("opacity", n), setOpVal),
-              filterVal,
-              (v: string) => {
-                setFilterVal(v)
-                if (v === "" || v === ".") return
-                if (!/^\d*\.?\d*$/.test(v) || !/\d/.test(v)) return
-                const n = parseFloat(v)
-                if (!isNaN(n) && n >= 0) set("filter", { ...config.filter, value: n })
-              },
-              (t: string) => set("filter", { type: t, value: config.filter?.value || 0 }),
-              config.filter?.type || "blur"
-            )}
+            <PropGrid
+              xVal={config.x} xUnit={xUnit} onXUnit={setXUnit} onX={v => set("x", v)}
+              yVal={config.y} yUnit={yUnit} onYUnit={setYUnit} onY={v => set("y", v)}
+              scale={config.scale} onScale={n => set("scale", n)}
+              rotation={config.rotation} onRot={n => set("rotation", n)}
+              opacity={config.opacity} onOp={n => set("opacity", n)}
+              filterType={config.filter?.type ?? "blur"}
+              onFilterType={t => set("filter", { type: t, value: config.filter?.value ?? 0 })}
+              filterVal={config.filter?.value ?? 0}
+              onFilterVal={n => set("filter", { type: config.filter?.type ?? "blur", value: n })}
+            />
           </div>
         </div>
       ) : (
-        /* Regular from/to */
-        renderPropertyGrid(
-          xVal, handleXChange, xUnit, handleXUnitChange,
-          yVal, handleYChange, yUnit, handleYUnitChange,
-          scaleVal, createNumberHandler(false, (n) => set("scale", n), setScaleVal),
-          rotVal, createNumberHandler(true, (n) => set("rotation", n), setRotVal),
-          opVal, createNumberHandler(false, (n) => set("opacity", n), setOpVal),
-          filterVal,
-          (v: string) => {
-            setFilterVal(v)
-            if (v === "" || v === ".") return
-            if (!/^\d*\.?\d*$/.test(v) || !/\d/.test(v)) return
-            const n = parseFloat(v)
-            if (!isNaN(n) && n >= 0) set("filter", { ...config.filter, value: n })
-          },
-          (t: string) => set("filter", { type: t, value: config.filter?.value || 0 }),
-          config.filter?.type || "blur"
-        )
+        <PropGrid
+          xVal={config.x} xUnit={xUnit} onXUnit={setXUnit} onX={v => set("x", v)}
+          yVal={config.y} yUnit={yUnit} onYUnit={setYUnit} onY={v => set("y", v)}
+          scale={config.scale} onScale={n => set("scale", n)}
+          rotation={config.rotation} onRot={n => set("rotation", n)}
+          opacity={config.opacity} onOp={n => set("opacity", n)}
+          filterType={config.filter?.type ?? "blur"}
+          onFilterType={t => set("filter", { type: t, value: config.filter?.value ?? 0 })}
+          filterVal={config.filter?.value ?? 0}
+          onFilterVal={n => set("filter", { type: config.filter?.type ?? "blur", value: n })}
+        />
       )}
 
-      {/* Repeat & Yoyo */}
-      <div className="grid grid-cols-2 gap-3 items-end">
-        <Field label="Repeat">
-          <Input
-            type="text" value={repeatVal}
-            onChange={createNumberHandler(false, (n) => set("repeat", n), setRepeatVal, true)}
-            className="h-8 text-xs" placeholder="0"
-          />
-        </Field>
-        <div className="flex items-center gap-2 h-8">
+      {/* Repeat + Yoyo */}
+      <div className="grid grid-cols-2 gap-4 items-end">
+        <SliderField
+          label="Repeat (−1 = ∞)"
+          value={config.repeat}
+          min={-1}
+          max={20}
+          step={1}
+          onChange={n => set("repeat", Math.round(n))}
+        />
+        <div className="flex items-center gap-2 pb-1">
           <Checkbox id="yoyo" checked={config.yoyo} onCheckedChange={(c) => set("yoyo", c as boolean)} />
           <Label htmlFor="yoyo" className="text-xs cursor-pointer">Yoyo</Label>
         </div>

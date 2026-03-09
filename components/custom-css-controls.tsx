@@ -2,9 +2,10 @@
 
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import type { AnimationConfig } from "@/types/animation"
+import { googleFonts, getFontCategories } from "@/lib/fonts"
 
 interface CustomCssControlsProps {
   config: AnimationConfig
@@ -85,11 +86,26 @@ export default function CustomCssControls({ config, onChange }: CustomCssControl
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="inherit">Default</SelectItem>
-              <SelectItem value="serif">Serif</SelectItem>
-              <SelectItem value="sans">Sans-serif</SelectItem>
-              <SelectItem value="mono">Monospace</SelectItem>
+            <SelectContent className="max-h-[300px]">
+              <SelectGroup>
+                <SelectLabel className="text-[10px]">Generic</SelectLabel>
+                <SelectItem value="inherit">Default</SelectItem>
+                <SelectItem value="serif">Serif</SelectItem>
+                <SelectItem value="sans">Sans-serif</SelectItem>
+                <SelectItem value="mono">Monospace</SelectItem>
+              </SelectGroup>
+              {getFontCategories().map((category) => (
+                <SelectGroup key={category}>
+                  <SelectLabel className="text-[10px]">{category}</SelectLabel>
+                  {googleFonts
+                    .filter((f) => f.category === category)
+                    .map((font) => (
+                      <SelectItem key={font.key} value={font.key} style={{ fontFamily: `var(--font-${font.key})` }}>
+                        {font.name}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              ))}
             </SelectContent>
           </Select>
         </div>

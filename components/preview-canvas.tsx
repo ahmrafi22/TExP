@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useMemo }
 import { gsap } from "gsap";
 import { useTheme } from "next-themes";
 import type { AnimationConfig, BackgroundConfig } from "@/types/animation";
+import { googleFonts } from "@/lib/fonts";
 
 interface PreviewCanvasProps {
   text: string;
@@ -93,6 +94,12 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     return splitTextConfig.type === "chars" ? ".char" : ".word";
   };
 
+  // All resettable style keys — used to clear stale inline styles
+  const allStyleKeys = [
+    "fontSize", "fontFamily", "fontWeight", "letterSpacing",
+    "lineHeight", "textDecoration", "textTransform", "background", "color",
+  ] as const;
+
   // Build computed styles from config (memoized)
   const computedStyles = useMemo(() => {
     const { customStyles } = animationConfig;
@@ -107,6 +114,13 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     if (fontFamily === "sans") fontFamily = "ui-sans-serif, system-ui, sans-serif";
     else if (fontFamily === "serif") fontFamily = "ui-serif, Georgia, serif";
     else if (fontFamily === "mono") fontFamily = "ui-monospace, monospace";
+    else if (fontFamily && fontFamily !== "inherit") {
+      // Check if it's a Google Font key
+      const googleFont = googleFonts.find((f) => f.key === fontFamily);
+      if (googleFont) {
+        fontFamily = `var(--font-${googleFont.key})`;
+      }
+    }
     if (fontFamily && fontFamily !== "inherit") styles.fontFamily = fontFamily;
 
     // Font weight
@@ -139,11 +153,6 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     // Color — use theme-aware default
     if (customStyles.color && customStyles.color !== "inherit") {
       styles.color = customStyles.color;
-    }
-
-    // Overflow
-    if (customStyles.overflowHidden) {
-      styles.overflow = "hidden";
     }
 
     return styles;
@@ -180,20 +189,29 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     gsap.killTweensOf(textRef.current);
     gsap.killTweensOf(textRef.current.children);
 
-    const clearTargets = splitTextConfig.enabled
-      ? textRef.current.querySelectorAll(getSplitSelector())
-      : [textRef.current];
+    // Kill tweens on any existing split spans
+    const existingSplits = textRef.current.querySelectorAll(".char, .word");
+    if (existingSplits.length > 0) {
+      gsap.killTweensOf(existingSplits);
+    }
 
-    gsap.set(clearTargets, { clearProps: "all" });
+    // Clear GSAP transforms on the container
+    gsap.set(textRef.current, {
+      clearProps: "transform,opacity,filter",
+    });
     gsap.set(textRef.current, {
       x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, filter: "none",
     });
 
+    // Re-apply custom styles on the container
+    Object.assign(textRef.current.style, computedStyles);
+
+    // Re-build the split DOM if split-text is enabled
     if (splitTextConfig.enabled) {
-      gsap.set(textRef.current.querySelectorAll(getSplitSelector()), {
-        x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, filter: "none",
-      });
+      textRef.current.textContent = text;
+      splitTextIntoElements(textRef.current, splitTextConfig.type);
     }
+
     setIsAnimating(false);
   };
 
@@ -280,7 +298,11 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
   // Apply inline styles to textRef whenever computedStyles change
   useEffect(() => {
     if (!textRef.current) return;
-    // Apply computed styles directly to the ref element
+    // Clear all style keys first to remove stale values
+    for (const key of allStyleKeys) {
+      textRef.current.style[key as any] = "";
+    }
+    // Apply fresh computed styles
     Object.assign(textRef.current.style, computedStyles);
   }, [computedStyles]);
 
@@ -321,19 +343,29 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
         } ${animationConfig.customStyles.containerOverflow ? "overflow-hidden" : "overflow-visible"}`}
         style={isAutoBackground ? {} : getBackgroundStyle()}
       >
+        {/* Overflow wrapper — clips animated text when overflowHidden is on */}
         <div
-          ref={textRef}
-          className="text-center select-none"
+          className="flex items-center justify-center"
           style={{
-            willChange: "transform, opacity, filter",
-            color: animationConfig.customStyles.color === "inherit"
-              ? (isAutoBackground ? "hsl(var(--canvas-text))" : undefined)
-              : animationConfig.customStyles.color,
-            ...computedStyles,
+            overflow: animationConfig.customStyles.overflowHidden ? "hidden" : "visible",
+            width: "100%",
+            height: "100%",
           }}
         >
-          {/* Only render text directly when split is NOT enabled */}
-          {!splitTextConfig.enabled && text}
+          <div
+            ref={textRef}
+            className="text-center select-none"
+            style={{
+              willChange: "transform, opacity, filter",
+              color: animationConfig.customStyles.color === "inherit"
+                ? (isAutoBackground ? "hsl(var(--canvas-text))" : undefined)
+                : animationConfig.customStyles.color,
+              ...computedStyles,
+            }}
+          >
+            {/* Only render text directly when split is NOT enabled */}
+            {!splitTextConfig.enabled && text}
+          </div>
         </div>
       </div>
     </div>

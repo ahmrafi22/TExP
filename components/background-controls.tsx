@@ -66,7 +66,7 @@ export default function BackgroundControls({ config, onChange }: BackgroundContr
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleColorChange("auto")}
-              className={`h-8 px-3 text-xs font-medium rounded-md transition-colors ${
+              className={`h-8 px-3 text-xs font-medium rounded-full transition-colors ${
                 config.color === "auto"
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80"

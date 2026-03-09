@@ -39,11 +39,14 @@ export default function CodeDialog({
           Get Code
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar p-6">
         <DialogHeader>
-          <DialogTitle>Generated Code</DialogTitle>
+          <DialogTitle className="text-base font-semibold flex items-center gap-2">
+            <Code2 className="h-4 w-4 text-violet-500" />
+            Export Code
+          </DialogTitle>
         </DialogHeader>
-        <div className="mt-4">
+        <div className="mt-2">
           <CodeGenerator
             text={text}
             animationConfig={animationConfig}

@@ -55,7 +55,10 @@ export default function SplitTextControls({ config, onChange }: SplitTextControl
               step="0.01"
               min="0"
               value={config.stagger}
-              onChange={(e) => handleChange("stagger", Number(e.target.value))}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                if (!isNaN(val) && val >= 0) handleChange("stagger", val)
+              }}
               className="h-8 text-xs"
               placeholder="0.1"
             />

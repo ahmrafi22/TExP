@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Copy } from "lucide-react"
+import { Copy, Check, Code2, FileCode } from "lucide-react"
+import { SiReact, SiVuedotjs, SiJavascript, SiTypescript } from "react-icons/si"
+import { TbBrandJavascript } from "react-icons/tb"
 import type { AnimationConfig, BackgroundConfig } from "@/types/animation"
 import { generateCode } from "@/utils/code-generator"
 
@@ -23,6 +23,17 @@ interface CodeGeneratorProps {
   onFrameworkChange: (framework: "vanilla" | "react" | "vue") => void
   onLanguageChange: (language: "js" | "ts") => void
 }
+
+const frameworkOptions = [
+  { value: "vanilla" as const, label: "Vanilla", icon: TbBrandJavascript, color: "text-yellow-500" },
+  { value: "react" as const, label: "React", icon: SiReact, color: "text-cyan-400" },
+  { value: "vue" as const, label: "Vue", icon: SiVuedotjs, color: "text-emerald-500" },
+]
+
+const languageOptions = [
+  { value: "js" as const, label: "JS", icon: SiJavascript, color: "text-yellow-400" },
+  { value: "ts" as const, label: "TS", icon: SiTypescript, color: "text-blue-500" },
+]
 
 export default function CodeGenerator({
   text,
@@ -51,74 +62,135 @@ export default function CodeGenerator({
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
-  return (
-    <Card className="h-full dark:bg-gray-800 dark:border-gray-700">
-      <CardHeader>
-        <CardTitle className="text-lg dark:text-white">Generated Code</CardTitle>
-        <div className="flex gap-2">
-          <Select value={framework} onValueChange={onFrameworkChange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vanilla">Vanilla JS</SelectItem>
-              <SelectItem value="react">React</SelectItem>
-              <SelectItem value="vue">Vue</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={language} onValueChange={onLanguageChange}>
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="js">JS</SelectItem>
-              <SelectItem value="ts">TS</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="animation" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="animation">Animation</TabsTrigger>
-            <TabsTrigger value="complete">Complete</TabsTrigger>
-          </TabsList>
+  const activeFramework = frameworkOptions.find(f => f.value === framework)!
+  const activeLanguage = languageOptions.find(l => l.value === language)!
 
-          <TabsContent value="animation" className="space-y-4">
-            <div className="relative">
-              <pre className="bg-gray-900 dark:bg-gray-950 text-green-400 dark:text-green-300 p-4 rounded-lg text-sm overflow-auto max-h-[300px] min-h-[250px]">
-                <code>{generatedCode.animation}</code>
-              </pre>
+  const fileExtension = framework === "vue"
+    ? ".vue"
+    : language === "ts"
+      ? (framework === "react" ? ".tsx" : ".ts")
+      : (framework === "react" ? ".jsx" : ".js")
+
+  return (
+    <div className="space-y-5">
+      {/* Framework & Language selectors */}
+      <div className="flex items-center gap-4">
+        {/* Framework pills */}
+        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/50">
+          {frameworkOptions.map((fw) => {
+            const Icon = fw.icon
+            const isActive = framework === fw.value
+            return (
+              <button
+                key={fw.value}
+                onClick={() => onFrameworkChange(fw.value)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${isActive ? fw.color : ""}`} />
+                {fw.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Language pills */}
+        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/50">
+          {languageOptions.map((lang) => {
+            const Icon = lang.icon
+            const isActive = language === lang.value
+            return (
+              <button
+                key={lang.value}
+                onClick={() => onLanguageChange(lang.value)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${isActive ? lang.color : ""}`} />
+                {lang.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* File badge */}
+        <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+          <FileCode className="h-3.5 w-3.5" />
+          <span className="font-mono">{activeFramework.label.toLowerCase()}{fileExtension}</span>
+        </div>
+      </div>
+
+      {/* Code tabs */}
+      <Tabs defaultValue="animation" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-9">
+          <TabsTrigger value="animation" className="text-xs gap-1.5">
+            <Code2 className="h-3.5 w-3.5" />
+            Animation Only
+          </TabsTrigger>
+          <TabsTrigger value="complete" className="text-xs gap-1.5">
+            <FileCode className="h-3.5 w-3.5" />
+            Complete Component
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="animation" className="mt-3">
+          <div className="relative group rounded-lg overflow-hidden border border-border">
+            <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <activeFramework.icon className={`h-3.5 w-3.5 ${activeFramework.color}`} />
+                <span>Animation Code</span>
+              </div>
               <Button
                 size="sm"
-                variant="outline"
-                className="absolute top-2 right-2 dark:bg-transparent"
+                variant="ghost"
+                className="h-7 px-2 text-xs gap-1.5"
                 onClick={() => copyToClipboard(generatedCode.animation, "animation")}
               >
-                <Copy className="w-4 h-4" />
-                {copiedCode === "animation" ? "Copied!" : "Copy"}
+                {copiedCode === "animation" ? (
+                  <><Check className="h-3.5 w-3.5 text-emerald-500" /> Copied</>
+                ) : (
+                  <><Copy className="h-3.5 w-3.5" /> Copy</>
+                )}
               </Button>
             </div>
-          </TabsContent>
+            <pre className="bg-zinc-950 text-zinc-100 p-4 text-sm overflow-auto max-h-[350px] min-h-[200px] custom-scrollbar">
+              <code>{generatedCode.animation}</code>
+            </pre>
+          </div>
+        </TabsContent>
 
-          <TabsContent value="complete" className="space-y-4">
-            <div className="relative">
-              <pre className="bg-gray-900 dark:bg-gray-950 text-green-400 dark:text-green-300 p-4 rounded-lg text-sm overflow-auto max-h-[300px] min-h-[250px]">
-                <code>{generatedCode.complete}</code>
-              </pre>
+        <TabsContent value="complete" className="mt-3">
+          <div className="relative group rounded-lg overflow-hidden border border-border">
+            <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <activeFramework.icon className={`h-3.5 w-3.5 ${activeFramework.color}`} />
+                <span>Complete Component</span>
+              </div>
               <Button
                 size="sm"
-                variant="outline"
-                className="absolute top-2 right-2 dark:bg-transparent"
+                variant="ghost"
+                className="h-7 px-2 text-xs gap-1.5"
                 onClick={() => copyToClipboard(generatedCode.complete, "complete")}
               >
-                <Copy className="w-4 h-4" />
-                {copiedCode === "complete" ? "Copied!" : "Copy"}
+                {copiedCode === "complete" ? (
+                  <><Check className="h-3.5 w-3.5 text-emerald-500" /> Copied</>
+                ) : (
+                  <><Copy className="h-3.5 w-3.5" /> Copy</>
+                )}
               </Button>
             </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            <pre className="bg-zinc-950 text-zinc-100 p-4 text-sm overflow-auto max-h-[350px] min-h-[200px] custom-scrollbar">
+              <code>{generatedCode.complete}</code>
+            </pre>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }

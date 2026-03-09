@@ -1,16 +1,18 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Play, RotateCcw, Trash2, Code2, ChevronRight, Type, Paintbrush, Settings2, Sparkles, Image, PanelRightOpen, X } from "lucide-react"
+import { Play, RotateCcw, Trash2, Code2, ChevronRight, Type, Paintbrush, Settings2, Sparkles, Image, PanelRightOpen, X, Wand2 } from "lucide-react"
 import TexpLogo from "@/components/texp-logo"
 import PreviewCanvas, { PreviewCanvasRef } from "@/components/preview-canvas"
 import AnimationControls from "@/components/animation-controls"
 import SplitTextControls from "@/components/split-text-controls"
 import CustomCssControls from "@/components/custom-css-controls"
 import BackgroundControls from "@/components/background-controls"
+import PresetSelector from "@/components/preset-selector"
 import TextInput from "@/components/text-input"
 import CodeDialog from "@/components/code-dialog"
 import type { AnimationConfig, BackgroundConfig } from "@/types/animation"
+import { ANIMATION_PRESETS } from "@/lib/presets"
 import ThemeToggle from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -28,6 +30,9 @@ export default function GSAPPlayground() {
     y: 0,
     scale: 1,
     rotation: 0,
+    rotationX: 0,
+    rotationY: 0,
+    skewX: 0,
     opacity: 1,
     duration: 1,
     delay: 0,
@@ -38,7 +43,7 @@ export default function GSAPPlayground() {
     yoyo: false,
     filter: { type: "blur", value: 0 },
     fromValues: {
-      x: 0, y: 0, scale: 1, rotation: 0, opacity: 1,
+      x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1,
       filter: { type: "blur", value: 0 },
     },
     customStyles: {
@@ -71,13 +76,16 @@ export default function GSAPPlayground() {
 
   const [splitTextConfig, setSplitTextConfig] = useState({
     enabled: false,
-    type: "chars" as "chars" | "words",
+    type: "chars" as "chars" | "words" | "lines",
     stagger: 0.1,
+    staggerFrom: "start" as "start" | "center" | "end" | "random" | "edges",
   })
+
+  const [activePresetId, setActivePresetId] = useState<string | null>(null)
 
   const [selectedFramework, setSelectedFramework] = useState<"vanilla" | "react" | "vue">("react")
   const [selectedLanguage, setSelectedLanguage] = useState<"js" | "ts">("ts")
-  const [activeTab, setActiveTab] = useState<string>("animation")
+  const [activeTab, setActiveTab] = useState<string>("presets")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const resetAllSettings = () => {
@@ -92,10 +100,48 @@ export default function GSAPPlayground() {
       },
       image: null,
     })
-    setSplitTextConfig({ enabled: false, type: "chars", stagger: 0.1 })
+    setSplitTextConfig({ enabled: false, type: "chars", stagger: 0.1, staggerFrom: "start" })
     setText("Hello GSAP!")
     setIsAnimating(false)
+    setActivePresetId(null)
     if (previewCanvasRef.current) previewCanvasRef.current.resetAnimation()
+  }
+
+  const applyPreset = (presetId: string) => {
+    const preset = ANIMATION_PRESETS.find((p) => p.id === presetId)
+    if (!preset) return
+
+    // Merge animation config: start from defaults, apply preset overrides
+    const newAnimConfig: AnimationConfig = {
+      ...defaultAnimationConfig,
+      ...preset.animationConfig,
+      filter: preset.animationConfig.filter ?? defaultAnimationConfig.filter,
+      fromValues: preset.animationConfig.fromValues ?? defaultAnimationConfig.fromValues,
+      // Always preserve user's current text styles; only override what the preset explicitly sets
+      customStyles: { ...animationConfig.customStyles, ...(preset.animationConfig.customStyles ?? {}) },
+    }
+
+    setAnimationConfig(newAnimConfig)
+
+    // Merge split text config
+    setSplitTextConfig({
+      enabled: preset.splitTextConfig.enabled ?? false,
+      type: preset.splitTextConfig.type ?? "chars",
+      stagger: preset.splitTextConfig.stagger ?? 0.1,
+      staggerFrom: preset.splitTextConfig.staggerFrom ?? "start",
+    })
+
+    setActivePresetId(presetId)
+
+    // Auto-play after a brief delay so state settles
+    setTimeout(() => {
+      if (previewCanvasRef.current) {
+        previewCanvasRef.current.resetAnimation()
+        setTimeout(() => {
+          if (previewCanvasRef.current) previewCanvasRef.current.playAnimation()
+        }, 50)
+      }
+    }, 50)
   }
 
   const playAnimation = () => {
@@ -109,17 +155,18 @@ export default function GSAPPlayground() {
   const resetAnimationProperties = () => {
     setAnimationConfig({
       ...animationConfig,
-      x: 0, y: 0, scale: 1, rotation: 0, opacity: 1,
+      x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1,
       duration: 1, delay: 0, ease: "power1.out", tweenType: "to",
       stagger: 0, repeat: 0, yoyo: false,
       filter: { type: "blur", value: 0 },
       fromValues: {
-        x: 0, y: 0, scale: 1, rotation: 0, opacity: 1,
+        x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1,
         filter: { type: "blur", value: 0 },
       },
     })
-    setSplitTextConfig({ enabled: false, type: "chars", stagger: 0.1 })
+    setSplitTextConfig({ enabled: false, type: "chars", stagger: 0.1, staggerFrom: "start" })
     setIsAnimating(false)
+    setActivePresetId(null)
     if (previewCanvasRef.current) previewCanvasRef.current.resetAnimation()
   }
 
@@ -132,20 +179,24 @@ export default function GSAPPlayground() {
 
   // Shared sidebar content used in both desktop sidebar and mobile sheet
   const sidebarContent = (
-    <Tabs defaultValue="animation" onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+    <Tabs defaultValue="presets" onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
       <div className="px-3 pt-3 pb-0">
-        <TabsList className="w-full grid grid-cols-2 h-10 relative">
+        <TabsList className="w-full grid grid-cols-3 h-10 relative">
           <span
             className="absolute inset-y-1 rounded-full bg-background shadow-sm transition-transform duration-300 ease-in-out"
             style={{
-              width: 'calc(50% - 4px)',
+              width: 'calc(33.333% - 4px)',
               left: '2px',
-              transform: activeTab === 'css' ? 'translateX(calc(100% + 4px))' : 'translateX(0)',
+              transform: activeTab === 'animation' ? 'translateX(calc(100% + 2px))' : activeTab === 'css' ? 'translateX(calc(200% + 4px))' : 'translateX(0)',
             }}
           />
+          <TabsTrigger value="presets" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+            <Wand2 className="h-3.5 w-3.5" />
+            Presets
+          </TabsTrigger>
           <TabsTrigger value="animation" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <Sparkles className="h-3.5 w-3.5" />
-            Animation
+            Animate
           </TabsTrigger>
           <TabsTrigger value="css" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <Paintbrush className="h-3.5 w-3.5" />
@@ -153,6 +204,16 @@ export default function GSAPPlayground() {
           </TabsTrigger>
         </TabsList>
       </div>
+
+      <TabsContent value="presets" className="flex-1 overflow-y-auto custom-scrollbar mt-0 px-5 py-5">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Wand2 className="h-4 w-4 text-violet-500" />
+            <h3 className="text-sm font-semibold">Animation Presets</h3>
+          </div>
+          <PresetSelector activePresetId={activePresetId} onSelectPreset={applyPreset} />
+        </div>
+      </TabsContent>
 
       <TabsContent value="animation" className="flex-1 overflow-y-auto custom-scrollbar mt-0 px-5 py-5">
         <div className="space-y-7">

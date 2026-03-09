@@ -12,8 +12,9 @@ interface CodeDialogProps {
   backgroundConfig: BackgroundConfig
   splitTextConfig: {
     enabled: boolean
-    type: "chars" | "words"
+    type: "chars" | "words" | "lines"
     stagger: number
+    staggerFrom: "start" | "center" | "end" | "random" | "edges"
   }
   framework: "vanilla" | "react" | "vue"
   language: "js" | "ts"

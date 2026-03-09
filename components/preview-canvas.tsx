@@ -15,13 +15,15 @@ interface PreviewCanvasProps {
   setBackgroundConfig: (config: BackgroundConfig) => void;
   splitTextConfig: {
     enabled: boolean;
-    type: "chars" | "words";
+    type: "chars" | "words" | "lines";
     stagger: number;
+    staggerFrom: "start" | "center" | "end" | "random" | "edges";
   };
   setSplitTextConfig: (config: {
     enabled: boolean;
-    type: "chars" | "words";
+    type: "chars" | "words" | "lines";
     stagger: number;
+    staggerFrom: "start" | "center" | "end" | "random" | "edges";
   }) => void;
   onResetAll: () => void;
 }
@@ -197,10 +199,10 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
 
     // Clear GSAP transforms on the container
     gsap.set(textRef.current, {
-      clearProps: "transform,opacity,filter",
+      clearProps: "transform,opacity,filter,rotationX,rotationY,skewX",
     });
     gsap.set(textRef.current, {
-      x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, filter: "none",
+      x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1, filter: "none",
     });
 
     // Re-apply custom styles on the container
@@ -247,13 +249,23 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     };
 
     if (splitTextConfig.enabled && splitTextConfig.stagger > 0) {
-      animationProps.stagger = splitTextConfig.stagger;
+      if (splitTextConfig.staggerFrom && splitTextConfig.staggerFrom !== "start") {
+        animationProps.stagger = {
+          each: splitTextConfig.stagger,
+          from: splitTextConfig.staggerFrom,
+        };
+      } else {
+        animationProps.stagger = splitTextConfig.stagger;
+      }
     }
 
     if (animationConfig.x !== 0) animationProps.x = animationConfig.x;
     if (animationConfig.y !== 0) animationProps.y = animationConfig.y;
     if (animationConfig.scale !== 1) animationProps.scale = animationConfig.scale;
     if (animationConfig.rotation !== 0) animationProps.rotation = animationConfig.rotation;
+    if (animationConfig.rotationX !== 0) animationProps.rotationX = animationConfig.rotationX;
+    if (animationConfig.rotationY !== 0) animationProps.rotationY = animationConfig.rotationY;
+    if (animationConfig.skewX !== 0) animationProps.skewX = animationConfig.skewX;
     if (animationConfig.opacity !== 1) animationProps.opacity = animationConfig.opacity;
 
     const filterStr = buildFilterString(animationConfig.filter);
@@ -266,6 +278,9 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
       if (fv.y !== undefined && fv.y !== 0) fromProps.y = fv.y;
       if (fv.scale !== undefined && fv.scale !== 1) fromProps.scale = fv.scale;
       if (fv.rotation !== undefined && fv.rotation !== 0) fromProps.rotation = fv.rotation;
+      if (fv.rotationX !== undefined && fv.rotationX !== 0) fromProps.rotationX = fv.rotationX;
+      if (fv.rotationY !== undefined && fv.rotationY !== 0) fromProps.rotationY = fv.rotationY;
+      if (fv.skewX !== undefined && fv.skewX !== 0) fromProps.skewX = fv.skewX;
       if (fv.opacity !== undefined && fv.opacity !== 1) fromProps.opacity = fv.opacity;
       if (fv.filter) {
         const fromFilter = buildFilterString(fv.filter);

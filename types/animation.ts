@@ -3,6 +3,9 @@ export interface AnimationConfig {
   y: number | string
   scale: number
   rotation: number
+  rotationX: number
+  rotationY: number
+  skewX: number
   opacity: number
   duration: number
   delay: number
@@ -21,6 +24,9 @@ export interface AnimationConfig {
     y?: number | string
     scale?: number
     rotation?: number
+    rotationX?: number
+    rotationY?: number
+    skewX?: number
     opacity?: number
     filter?: {
       type: "blur" | "brightness" | "contrast" | "saturate"
@@ -57,6 +63,20 @@ export interface SplitTextConfig {
   enabled: boolean
   type: "chars" | "words" | "lines"
   stagger: number
+  staggerFrom: "start" | "center" | "end" | "random" | "edges"
+}
+
+export type StaggerFrom = SplitTextConfig["staggerFrom"]
+
+export interface Preset {
+  id: string
+  name: string
+  description: string
+  category: "entrance" | "emphasis" | "3d" | "text" | "creative"
+  animationConfig: Omit<Partial<AnimationConfig>, 'customStyles'> & {
+    customStyles?: Partial<AnimationConfig['customStyles']>
+  }
+  splitTextConfig: Partial<SplitTextConfig>
 }
 
 export interface CodeGenerationParams {

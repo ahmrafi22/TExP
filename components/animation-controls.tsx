@@ -225,12 +225,15 @@ interface PropGridProps {
   yVal: number | string; yUnit: "px" | "%"; onYUnit: (u: "px" | "%") => void; onY: (v: number | string) => void
   scale: number; onScale: (n: number) => void
   rotation: number; onRot: (n: number) => void
+  rotationX: number; onRotX: (n: number) => void
+  rotationY: number; onRotY: (n: number) => void
+  skewX: number; onSkewX: (n: number) => void
   opacity: number; onOp: (n: number) => void
   filterType: string; onFilterType: (t: string) => void
   filterVal: number; onFilterVal: (n: number) => void
 }
 
-function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale, onScale, rotation, onRot, opacity, onOp, filterType, onFilterType, filterVal, onFilterVal }: PropGridProps) {
+function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale, onScale, rotation, onRot, rotationX, onRotX, rotationY, onRotY, skewX, onSkewX, opacity, onOp, filterType, onFilterType, filterVal, onFilterVal }: PropGridProps) {
   const filterOpt = filterOptions.find(f => f.value === filterType) || filterOptions[0]
   return (
     <div className="space-y-4">
@@ -242,6 +245,11 @@ function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale,
         <SliderField label="Scale" value={scale} min={0} max={5} step={0.05} onChange={onScale} />
         <SliderField label="Rotation °" value={rotation} min={-360} max={360} step={1} onChange={onRot} />
         <SliderField label="Opacity" value={opacity} min={0} max={1} step={0.01} onChange={onOp} />
+      </div>
+      <div className="grid grid-cols-3 gap-x-3 gap-y-3">
+        <SliderField label="Rotate X °" value={rotationX} min={-360} max={360} step={1} onChange={onRotX} />
+        <SliderField label="Rotate Y °" value={rotationY} min={-360} max={360} step={1} onChange={onRotY} />
+        <SliderField label="Skew X °" value={skewX} min={-90} max={90} step={1} onChange={onSkewX} />
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-end">
         <Field label="Filter">
@@ -319,6 +327,9 @@ export default function AnimationControls({ config, onChange }: AnimationControl
               yVal={config.fromValues?.y ?? 0} yUnit={fromYUnit} onYUnit={setFromYUnit} onY={v => setFrom("y", v)}
               scale={config.fromValues?.scale ?? 1} onScale={n => setFrom("scale", n)}
               rotation={config.fromValues?.rotation ?? 0} onRot={n => setFrom("rotation", n)}
+              rotationX={config.fromValues?.rotationX ?? 0} onRotX={n => setFrom("rotationX", n)}
+              rotationY={config.fromValues?.rotationY ?? 0} onRotY={n => setFrom("rotationY", n)}
+              skewX={config.fromValues?.skewX ?? 0} onSkewX={n => setFrom("skewX", n)}
               opacity={config.fromValues?.opacity ?? 1} onOp={n => setFrom("opacity", n)}
               filterType={config.fromValues?.filter?.type ?? "blur"}
               onFilterType={t => setFrom("filter", { type: t, value: config.fromValues?.filter?.value ?? 0 })}
@@ -333,6 +344,9 @@ export default function AnimationControls({ config, onChange }: AnimationControl
               yVal={config.y} yUnit={yUnit} onYUnit={setYUnit} onY={v => set("y", v)}
               scale={config.scale} onScale={n => set("scale", n)}
               rotation={config.rotation} onRot={n => set("rotation", n)}
+              rotationX={config.rotationX} onRotX={n => set("rotationX", n)}
+              rotationY={config.rotationY} onRotY={n => set("rotationY", n)}
+              skewX={config.skewX} onSkewX={n => set("skewX", n)}
               opacity={config.opacity} onOp={n => set("opacity", n)}
               filterType={config.filter?.type ?? "blur"}
               onFilterType={t => set("filter", { type: t, value: config.filter?.value ?? 0 })}
@@ -347,6 +361,9 @@ export default function AnimationControls({ config, onChange }: AnimationControl
           yVal={config.y} yUnit={yUnit} onYUnit={setYUnit} onY={v => set("y", v)}
           scale={config.scale} onScale={n => set("scale", n)}
           rotation={config.rotation} onRot={n => set("rotation", n)}
+          rotationX={config.rotationX} onRotX={n => set("rotationX", n)}
+          rotationY={config.rotationY} onRotY={n => set("rotationY", n)}
+          skewX={config.skewX} onSkewX={n => set("skewX", n)}
           opacity={config.opacity} onOp={n => set("opacity", n)}
           filterType={config.filter?.type ?? "blur"}
           onFilterType={t => set("filter", { type: t, value: config.filter?.value ?? 0 })}

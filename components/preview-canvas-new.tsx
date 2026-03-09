@@ -17,11 +17,13 @@ interface PreviewCanvasProps {
     enabled: boolean;
     type: "chars" | "words" | "lines";
     stagger: number;
+    staggerFrom: "start" | "center" | "end" | "random" | "edges";
   };
   setSplitTextConfig: (config: {
     enabled: boolean;
     type: "chars" | "words" | "lines";
     stagger: number;
+    staggerFrom: "start" | "center" | "end" | "random" | "edges";
   }) => void;
   onResetAll: () => void;
 }

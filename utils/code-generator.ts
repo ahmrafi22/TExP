@@ -109,6 +109,9 @@ function generateAnimationLogic(params: CodeGenerationParams) {
   }
   if (animationConfig.scale !== 1) animProps.push(`scale: ${animationConfig.scale}`)
   if (animationConfig.rotation !== 0) animProps.push(`rotation: ${animationConfig.rotation}`)
+  if (animationConfig.rotationX !== 0) animProps.push(`rotationX: ${animationConfig.rotationX}`)
+  if (animationConfig.rotationY !== 0) animProps.push(`rotationY: ${animationConfig.rotationY}`)
+  if (animationConfig.skewX !== 0) animProps.push(`skewX: ${animationConfig.skewX}`)
   if (animationConfig.opacity !== 1) animProps.push(`opacity: ${animationConfig.opacity}`)
 
   // Add filter if it has a value
@@ -146,7 +149,11 @@ function generateAnimationLogic(params: CodeGenerationParams) {
 
   // Stagger for SplitText only
   if (splitTextConfig.enabled && splitTextConfig.stagger > 0) {
-    animProps.push(`stagger: ${splitTextConfig.stagger}`)
+    if (splitTextConfig.staggerFrom && splitTextConfig.staggerFrom !== "start") {
+      animProps.push(`stagger: { each: ${splitTextConfig.stagger}, from: "${splitTextConfig.staggerFrom}" }`)
+    } else {
+      animProps.push(`stagger: ${splitTextConfig.stagger}`)
+    }
   }
 
   const target = splitTextConfig.enabled ? "elements" : elementRef
@@ -174,6 +181,9 @@ function generateAnimationLogic(params: CodeGenerationParams) {
     }
     if ((fromValues?.scale ?? 1) !== 1) fromProps.push(`scale: ${fromValues?.scale ?? 1}`)
     if ((fromValues?.rotation ?? 0) !== 0) fromProps.push(`rotation: ${fromValues?.rotation ?? 0}`)
+    if ((fromValues?.rotationX ?? 0) !== 0) fromProps.push(`rotationX: ${fromValues?.rotationX ?? 0}`)
+    if ((fromValues?.rotationY ?? 0) !== 0) fromProps.push(`rotationY: ${fromValues?.rotationY ?? 0}`)
+    if ((fromValues?.skewX ?? 0) !== 0) fromProps.push(`skewX: ${fromValues?.skewX ?? 0}`)
     if ((fromValues?.opacity ?? 1) !== 1) fromProps.push(`opacity: ${fromValues?.opacity ?? 1}`)
 
     // Add from filter if it has a value
@@ -207,6 +217,9 @@ function generateAnimationLogic(params: CodeGenerationParams) {
     }
     if (animationConfig.scale !== 1) toProps.push(`scale: ${animationConfig.scale}`)
     if (animationConfig.rotation !== 0) toProps.push(`rotation: ${animationConfig.rotation}`)
+    if (animationConfig.rotationX !== 0) toProps.push(`rotationX: ${animationConfig.rotationX}`)
+    if (animationConfig.rotationY !== 0) toProps.push(`rotationY: ${animationConfig.rotationY}`)
+    if (animationConfig.skewX !== 0) toProps.push(`skewX: ${animationConfig.skewX}`)
     if (animationConfig.opacity !== 1) toProps.push(`opacity: ${animationConfig.opacity}`)
 
     // Add to filter if it has a value

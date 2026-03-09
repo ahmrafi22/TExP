@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch"
 
 interface SplitTextConfig {
   enabled: boolean
-  type: "chars" | "words"
+  type: "chars" | "words" | "lines"
   stagger: number
+  staggerFrom: "start" | "center" | "end" | "random" | "edges"
 }
 
 interface SplitTextControlsProps {
@@ -37,7 +38,7 @@ export default function SplitTextControls({ config, onChange }: SplitTextControl
             <Label className="text-xs text-muted-foreground mb-1.5 block">Split Type</Label>
             <Select
               value={config.type}
-              onValueChange={(value: "chars" | "words") => handleChange("type", value)}
+              onValueChange={(value: "chars" | "words" | "lines") => handleChange("type", value)}
             >
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
@@ -45,6 +46,7 @@ export default function SplitTextControls({ config, onChange }: SplitTextControl
               <SelectContent>
                 <SelectItem value="chars">Characters</SelectItem>
                 <SelectItem value="words">Words</SelectItem>
+                <SelectItem value="lines">Lines</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -62,6 +64,24 @@ export default function SplitTextControls({ config, onChange }: SplitTextControl
               className="h-8 text-xs"
               placeholder="0.1"
             />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Stagger From</Label>
+            <Select
+              value={config.staggerFrom}
+              onValueChange={(value: "start" | "center" | "end" | "random" | "edges") => handleChange("staggerFrom", value)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="start">Start</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="end">End</SelectItem>
+                <SelectItem value="random">Random</SelectItem>
+                <SelectItem value="edges">Edges</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}

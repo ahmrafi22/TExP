@@ -5,11 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import type { AnimationConfig } from "@/types/animation"
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react"
-
-interface AnimationControlsProps {
-  config: AnimationConfig
-  onChange: (config: AnimationConfig) => void
-}
+import { usePlaygroundStore } from "@/store/use-playground-store"
+import { useShallow } from "zustand/react/shallow"
 
 const easingOptions = [
   "none", "power1.out", "power1.in", "power1.inOut",
@@ -273,7 +270,14 @@ function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale,
   )
 }
 
-export default function AnimationControls({ config, onChange }: AnimationControlsProps) {
+export default function AnimationControls() {
+  const { config, onChange } = usePlaygroundStore(
+    useShallow((s) => ({
+      config: s.animationConfig,
+      onChange: s.setAnimationConfig,
+    })),
+  )
+
   const [xUnit, setXUnit] = useState<"px" | "%">("px")
   const [yUnit, setYUnit] = useState<"px" | "%">("px")
   const [fromXUnit, setFromXUnit] = useState<"px" | "%">("px")

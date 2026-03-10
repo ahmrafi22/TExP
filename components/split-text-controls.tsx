@@ -4,22 +4,19 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { usePlaygroundStore } from "@/store/use-playground-store"
+import { useShallow } from "zustand/react/shallow"
 
-interface SplitTextConfig {
-  enabled: boolean
-  type: "chars" | "words" | "lines"
-  stagger: number
-  staggerFrom: "start" | "center" | "end" | "random" | "edges"
-}
+export default function SplitTextControls() {
+  const { config, setSplitTextConfig } = usePlaygroundStore(
+    useShallow((s) => ({
+      config: s.splitTextConfig,
+      setSplitTextConfig: s.setSplitTextConfig,
+    })),
+  )
 
-interface SplitTextControlsProps {
-  config: SplitTextConfig
-  onChange: (config: SplitTextConfig) => void
-}
-
-export default function SplitTextControls({ config, onChange }: SplitTextControlsProps) {
-  const handleChange = (key: keyof SplitTextConfig, value: any) => {
-    onChange({ ...config, [key]: value })
+  const handleChange = (key: keyof typeof config, value: any) => {
+    setSplitTextConfig({ ...config, [key]: value })
   }
 
   return (

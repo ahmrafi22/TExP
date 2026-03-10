@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { Play, RotateCcw, Trash2, Code2, ChevronRight, Type, Paintbrush, Settings2, Sparkles, Image, PanelRightOpen, X, Wand2 } from "lucide-react"
+import { useRef, useCallback } from "react"
+import { Play, RotateCcw, Trash2, Type, Paintbrush, Settings2, Sparkles, Image, Wand2 } from "lucide-react"
 import TexpLogo from "@/components/texp-logo"
 import PreviewCanvas, { PreviewCanvasRef } from "@/components/preview-canvas"
 import AnimationControls from "@/components/animation-controls"
@@ -11,171 +11,69 @@ import BackgroundControls from "@/components/background-controls"
 import PresetSelector from "@/components/preset-selector"
 import TextInput from "@/components/text-input"
 import CodeDialog from "@/components/code-dialog"
-import type { AnimationConfig, BackgroundConfig } from "@/types/animation"
-import { ANIMATION_PRESETS } from "@/lib/presets"
 import ThemeToggle from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { usePlaygroundStore } from "@/store/use-playground-store"
+import { useShallow } from "zustand/react/shallow"
 
 export default function GSAPPlayground() {
-  const [text, setText] = useState("Hello GSAP!")
-  const [isAnimating, setIsAnimating] = useState(false)
   const previewCanvasRef = useRef<PreviewCanvasRef>(null)
 
-  const defaultAnimationConfig: AnimationConfig = {
-    x: 0,
-    y: 0,
-    scale: 1,
-    rotation: 0,
-    rotationX: 0,
-    rotationY: 0,
-    skewX: 0,
-    opacity: 1,
-    duration: 1,
-    delay: 0,
-    ease: "power1.out",
-    tweenType: "to",
-    stagger: 0,
-    repeat: 0,
-    yoyo: false,
-    filter: { type: "blur", value: 0 },
-    fromValues: {
-      x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1,
-      filter: { type: "blur", value: 0 },
-    },
-    customStyles: {
-      fontSize: "4xl",
-      fontFamily: "inherit",
-      fontWeight: "bold",
-      letterSpacing: "normal",
-      background: "transparent",
-      color: "inherit",
-      textDecoration: "none",
-      textTransform: "none",
-      lineHeight: "normal",
-      overflowHidden: false,
-      containerOverflow: false,
-    },
-  }
+  const {
+    isAnimating,
+    setIsAnimating,
+    activeTab,
+    setActiveTab,
+    sidebarOpen,
+    setSidebarOpen,
+    splitTextEnabled,
+    backgroundType,
+    backgroundColorVal,
+    tweenType,
+    ease,
+    duration,
+  } = usePlaygroundStore(
+    useShallow((s) => ({
+      isAnimating: s.isAnimating,
+      setIsAnimating: s.setIsAnimating,
+      activeTab: s.activeTab,
+      setActiveTab: s.setActiveTab,
+      sidebarOpen: s.sidebarOpen,
+      setSidebarOpen: s.setSidebarOpen,
+      splitTextEnabled: s.splitTextConfig.enabled,
+      backgroundType: s.backgroundConfig.type,
+      backgroundColorVal: s.backgroundConfig.color,
+      tweenType: s.animationConfig.tweenType,
+      ease: s.animationConfig.ease,
+      duration: s.animationConfig.duration,
+    })),
+  )
 
-  const [animationConfig, setAnimationConfig] = useState<AnimationConfig>(defaultAnimationConfig)
+  const resetAllSettings = usePlaygroundStore((s) => s.resetAllSettings)
+  const resetAnimationProperties = usePlaygroundStore((s) => s.resetAnimationProperties)
+  const resetCustomCSS = usePlaygroundStore((s) => s.resetCustomCSS)
 
-  const [backgroundConfig, setBackgroundConfig] = useState<BackgroundConfig>({
-    type: "solid",
-    color: "auto",
-    gradient: {
-      type: "linear",
-      colors: ["#667eea", "#764ba2"],
-      direction: "to right",
-    },
-    image: null,
-  })
+  const handleResetAll = useCallback(() => {
+    resetAllSettings()
+    previewCanvasRef.current?.resetAnimation()
+  }, [resetAllSettings])
 
-  const [splitTextConfig, setSplitTextConfig] = useState({
-    enabled: false,
-    type: "chars" as "chars" | "words" | "lines",
-    stagger: 0.1,
-    staggerFrom: "start" as "start" | "center" | "end" | "random" | "edges",
-  })
+  const handleResetAnimation = useCallback(() => {
+    resetAnimationProperties()
+    previewCanvasRef.current?.resetAnimation()
+  }, [resetAnimationProperties])
 
-  const [activePresetId, setActivePresetId] = useState<string | null>(null)
-
-  const [selectedFramework, setSelectedFramework] = useState<"vanilla" | "react" | "vue">("react")
-  const [selectedLanguage, setSelectedLanguage] = useState<"js" | "ts">("ts")
-  const [activeTab, setActiveTab] = useState<string>("presets")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const resetAllSettings = () => {
-    setAnimationConfig(defaultAnimationConfig)
-    setBackgroundConfig({
-      type: "solid",
-      color: "auto",
-      gradient: {
-        type: "linear",
-        colors: ["#667eea", "#764ba2"],
-        direction: "to right",
-      },
-      image: null,
-    })
-    setSplitTextConfig({ enabled: false, type: "chars", stagger: 0.1, staggerFrom: "start" })
-    setText("Hello GSAP!")
-    setIsAnimating(false)
-    setActivePresetId(null)
-    if (previewCanvasRef.current) previewCanvasRef.current.resetAnimation()
-  }
-
-  const applyPreset = (presetId: string) => {
-    const preset = ANIMATION_PRESETS.find((p) => p.id === presetId)
-    if (!preset) return
-
-    // Merge animation config: start from defaults, apply preset overrides
-    const newAnimConfig: AnimationConfig = {
-      ...defaultAnimationConfig,
-      ...preset.animationConfig,
-      filter: preset.animationConfig.filter ?? defaultAnimationConfig.filter,
-      fromValues: preset.animationConfig.fromValues ?? defaultAnimationConfig.fromValues,
-      // Always preserve user's current text styles; only override what the preset explicitly sets
-      customStyles: { ...animationConfig.customStyles, ...(preset.animationConfig.customStyles ?? {}) },
-    }
-
-    setAnimationConfig(newAnimConfig)
-
-    // Merge split text config
-    setSplitTextConfig({
-      enabled: preset.splitTextConfig.enabled ?? false,
-      type: preset.splitTextConfig.type ?? "chars",
-      stagger: preset.splitTextConfig.stagger ?? 0.1,
-      staggerFrom: preset.splitTextConfig.staggerFrom ?? "start",
-    })
-
-    setActivePresetId(presetId)
-
-    // Auto-play after a brief delay so state settles
-    setTimeout(() => {
-      if (previewCanvasRef.current) {
-        previewCanvasRef.current.resetAnimation()
-        setTimeout(() => {
-          if (previewCanvasRef.current) previewCanvasRef.current.playAnimation()
-        }, 50)
-      }
-    }, 50)
-  }
-
-  const playAnimation = () => {
+  const playAnimation = useCallback(() => {
     if (previewCanvasRef.current) {
       setIsAnimating(true)
       previewCanvasRef.current.playAnimation()
       setTimeout(() => setIsAnimating(false), 100)
     }
-  }
-
-  const resetAnimationProperties = () => {
-    setAnimationConfig({
-      ...animationConfig,
-      x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1,
-      duration: 1, delay: 0, ease: "power1.out", tweenType: "to",
-      stagger: 0, repeat: 0, yoyo: false,
-      filter: { type: "blur", value: 0 },
-      fromValues: {
-        x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1,
-        filter: { type: "blur", value: 0 },
-      },
-    })
-    setSplitTextConfig({ enabled: false, type: "chars", stagger: 0.1, staggerFrom: "start" })
-    setIsAnimating(false)
-    setActivePresetId(null)
-    if (previewCanvasRef.current) previewCanvasRef.current.resetAnimation()
-  }
-
-  const resetCustomCSS = () => {
-    setAnimationConfig({
-      ...animationConfig,
-      customStyles: { ...defaultAnimationConfig.customStyles },
-    })
-  }
+  }, [setIsAnimating])
 
   // Shared sidebar content used in both desktop sidebar and mobile sheet
   const sidebarContent = (
@@ -211,7 +109,7 @@ export default function GSAPPlayground() {
             <Wand2 className="h-4 w-4 text-violet-500" />
             <h3 className="text-sm font-semibold">Animation Presets</h3>
           </div>
-          <PresetSelector activePresetId={activePresetId} onSelectPreset={applyPreset} />
+          <PresetSelector canvasRef={previewCanvasRef} />
         </div>
       </TabsContent>
 
@@ -222,18 +120,18 @@ export default function GSAPPlayground() {
               <Sparkles className="h-4 w-4 text-violet-500" />
               <h3 className="text-sm font-semibold">Animation Properties</h3>
             </div>
-            <AnimationControls config={animationConfig} onChange={setAnimationConfig} />
+            <AnimationControls />
           </div>
           <Separator />
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Type className="h-4 w-4 text-blue-500" />
               <h3 className="text-sm font-semibold">Split Text</h3>
-              {splitTextConfig.enabled && (
+              {splitTextEnabled && (
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">ON</Badge>
               )}
             </div>
-            <SplitTextControls config={splitTextConfig} onChange={setSplitTextConfig} />
+            <SplitTextControls />
           </div>
         </div>
       </TabsContent>
@@ -251,7 +149,7 @@ export default function GSAPPlayground() {
                 Reset
               </Button>
             </div>
-            <CustomCssControls config={animationConfig} onChange={setAnimationConfig} />
+            <CustomCssControls />
           </div>
           <Separator />
           <div>
@@ -259,10 +157,10 @@ export default function GSAPPlayground() {
               <Image className="h-4 w-4 text-amber-500" />
               <h3 className="text-sm font-semibold">Background</h3>
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                {backgroundConfig.type === "solid" && backgroundConfig.color === "auto" ? "Auto" : backgroundConfig.type}
+                {backgroundType === "solid" && backgroundColorVal === "auto" ? "Auto" : backgroundType}
               </Badge>
             </div>
-            <BackgroundControls config={backgroundConfig} onChange={setBackgroundConfig} />
+            <BackgroundControls />
           </div>
         </div>
       </TabsContent>
@@ -291,16 +189,7 @@ export default function GSAPPlayground() {
         </div>
 
         <div className="flex items-center gap-2">
-          <CodeDialog
-            text={text}
-            animationConfig={animationConfig}
-            backgroundConfig={backgroundConfig}
-            splitTextConfig={splitTextConfig}
-            framework={selectedFramework}
-            language={selectedLanguage}
-            onFrameworkChange={setSelectedFramework}
-            onLanguageChange={setSelectedLanguage}
-          />
+          <CodeDialog />
           <ThemeToggle />
           {/* Mobile settings toggle */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -330,23 +219,12 @@ export default function GSAPPlayground() {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Text Input */}
           <div className="w-[90%] md:w-1/2 mx-auto mt-3 mb-2">
-            <TextInput text={text} onChange={setText} />
+            <TextInput />
           </div>
 
           {/* Canvas */}
           <div className="flex-1 flex items-center justify-center px-3 md:px-4">
-            <PreviewCanvas
-              ref={previewCanvasRef}
-              text={text}
-              setText={setText}
-              animationConfig={animationConfig}
-              setAnimationConfig={setAnimationConfig}
-              backgroundConfig={backgroundConfig}
-              setBackgroundConfig={setBackgroundConfig}
-              splitTextConfig={splitTextConfig}
-              setSplitTextConfig={setSplitTextConfig}
-              onResetAll={resetAllSettings}
-            />
+            <PreviewCanvas ref={previewCanvasRef} />
           </div>
 
           {/* Play / Reset / Clear buttons */}
@@ -361,7 +239,7 @@ export default function GSAPPlayground() {
               <Play className="h-5 w-5" />
             </Button>
             <Button
-              onClick={resetAnimationProperties}
+              onClick={handleResetAnimation}
               size="lg"
               variant="outline"
               className="h-12 w-12 rounded-full"
@@ -370,7 +248,7 @@ export default function GSAPPlayground() {
               <RotateCcw className="h-5 w-5" />
             </Button>
             <Button
-              onClick={resetAllSettings}
+              onClick={handleResetAll}
               size="lg"
               variant="ghost"
               className="h-12 w-12 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -383,7 +261,7 @@ export default function GSAPPlayground() {
           {/* Info bar */}
           <div className="pb-2 flex items-center justify-center">
             <span className="text-xs text-muted-foreground">
-              {animationConfig.tweenType === "fromTo" ? "fromTo" : animationConfig.tweenType} · {animationConfig.ease} · {animationConfig.duration}s
+              {tweenType === "fromTo" ? "fromTo" : tweenType} · {ease} · {duration}s
             </span>
           </div>
         </div>

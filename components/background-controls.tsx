@@ -7,13 +7,16 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import type { BackgroundConfig } from "@/types/animation"
 import { Upload } from "lucide-react"
+import { usePlaygroundStore } from "@/store/use-playground-store"
+import { useShallow } from "zustand/react/shallow"
 
-interface BackgroundControlsProps {
-  config: BackgroundConfig
-  onChange: (config: BackgroundConfig) => void
-}
-
-export default function BackgroundControls({ config, onChange }: BackgroundControlsProps) {
+export default function BackgroundControls() {
+  const { config, onChange } = usePlaygroundStore(
+    useShallow((s) => ({
+      config: s.backgroundConfig,
+      onChange: s.setBackgroundConfig,
+    })),
+  )
   const handleTypeChange = (type: "solid" | "gradient" | "image") => {
     if (type === "solid" && config.type !== "solid") {
       onChange({ ...config, type, color: "auto" })

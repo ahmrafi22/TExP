@@ -6,24 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Copy, Check, Code2, FileCode } from "lucide-react"
 import { SiReact, SiVuedotjs, SiJavascript, SiTypescript } from "react-icons/si"
 import { TbBrandJavascript } from "react-icons/tb"
-import type { AnimationConfig, BackgroundConfig } from "@/types/animation"
 import { generateCode } from "@/utils/code-generator"
-
-interface CodeGeneratorProps {
-  text: string
-  animationConfig: AnimationConfig
-  backgroundConfig: BackgroundConfig
-  splitTextConfig: {
-    enabled: boolean
-    type: "chars" | "words" | "lines"
-    stagger: number
-    staggerFrom: "start" | "center" | "end" | "random" | "edges"
-  }
-  framework: "vanilla" | "react" | "vue"
-  language: "js" | "ts"
-  onFrameworkChange: (framework: "vanilla" | "react" | "vue") => void
-  onLanguageChange: (language: "js" | "ts") => void
-}
+import { usePlaygroundStore } from "@/store/use-playground-store"
+import { useShallow } from "zustand/react/shallow"
 
 const frameworkOptions = [
   { value: "vanilla" as const, label: "Vanilla", icon: TbBrandJavascript, color: "text-yellow-500" },
@@ -36,16 +21,29 @@ const languageOptions = [
   { value: "ts" as const, label: "TS", icon: SiTypescript, color: "text-blue-500" },
 ]
 
-export default function CodeGenerator({
-  text,
-  animationConfig,
-  backgroundConfig,
-  splitTextConfig,
-  framework,
-  language,
-  onFrameworkChange,
-  onLanguageChange,
-}: CodeGeneratorProps) {
+export default function CodeGenerator() {
+  const {
+    text,
+    animationConfig,
+    backgroundConfig,
+    splitTextConfig,
+    framework,
+    language,
+    onFrameworkChange,
+    onLanguageChange,
+  } = usePlaygroundStore(
+    useShallow((s) => ({
+      text: s.text,
+      animationConfig: s.animationConfig,
+      backgroundConfig: s.backgroundConfig,
+      splitTextConfig: s.splitTextConfig,
+      framework: s.selectedFramework,
+      language: s.selectedLanguage,
+      onFrameworkChange: s.setSelectedFramework,
+      onLanguageChange: s.setSelectedLanguage,
+    })),
+  )
+
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const generatedCode = generateCode({

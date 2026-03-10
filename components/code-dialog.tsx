@@ -4,34 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Code2 } from "lucide-react"
 import CodeGenerator from "@/components/code-generator"
-import type { AnimationConfig, BackgroundConfig } from "@/types/animation"
 
-interface CodeDialogProps {
-  text: string
-  animationConfig: AnimationConfig
-  backgroundConfig: BackgroundConfig
-  splitTextConfig: {
-    enabled: boolean
-    type: "chars" | "words" | "lines"
-    stagger: number
-    staggerFrom: "start" | "center" | "end" | "random" | "edges"
-  }
-  framework: "vanilla" | "react" | "vue"
-  language: "js" | "ts"
-  onFrameworkChange: (framework: "vanilla" | "react" | "vue") => void
-  onLanguageChange: (language: "js" | "ts") => void
-}
-
-export default function CodeDialog({
-  text,
-  animationConfig,
-  backgroundConfig,
-  splitTextConfig,
-  framework,
-  language,
-  onFrameworkChange,
-  onLanguageChange,
-}: CodeDialogProps) {
+export default function CodeDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -48,16 +22,7 @@ export default function CodeDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="mt-2">
-          <CodeGenerator
-            text={text}
-            animationConfig={animationConfig}
-            backgroundConfig={backgroundConfig}
-            splitTextConfig={splitTextConfig}
-            framework={framework}
-            language={language}
-            onFrameworkChange={onFrameworkChange}
-            onLanguageChange={onLanguageChange}
-          />
+          <CodeGenerator />
         </div>
       </DialogContent>
     </Dialog>

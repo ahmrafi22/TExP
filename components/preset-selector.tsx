@@ -1,16 +1,38 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type RefObject } from "react"
 import { ANIMATION_PRESETS, PRESET_CATEGORIES } from "@/lib/presets"
 import { cn } from "@/lib/utils"
+import { usePlaygroundStore } from "@/store/use-playground-store"
+import { useShallow } from "zustand/react/shallow"
+import type { PreviewCanvasRef } from "@/components/preview-canvas"
 
 interface PresetSelectorProps {
-  activePresetId: string | null
-  onSelectPreset: (presetId: string) => void
+  canvasRef: RefObject<PreviewCanvasRef | null>
 }
 
-export default function PresetSelector({ activePresetId, onSelectPreset }: PresetSelectorProps) {
+export default function PresetSelector({ canvasRef }: PresetSelectorProps) {
   const [activeCategory, setActiveCategory] = useState<string>("all")
+
+  const { activePresetId, applyPreset } = usePlaygroundStore(
+    useShallow((s) => ({
+      activePresetId: s.activePresetId,
+      applyPreset: s.applyPreset,
+    })),
+  )
+
+  const handleSelectPreset = (presetId: string) => {
+    applyPreset(presetId)
+    // Auto-play after a brief delay so state settles (Zustand updates are sync)
+    setTimeout(() => {
+      if (canvasRef.current) {
+        canvasRef.current.resetAnimation()
+        setTimeout(() => {
+          canvasRef.current?.playAnimation()
+        }, 50)
+      }
+    }, 50)
+  }
 
   const filtered = activeCategory === "all"
     ? ANIMATION_PRESETS
@@ -52,7 +74,7 @@ export default function PresetSelector({ activePresetId, onSelectPreset }: Prese
         {filtered.map((preset) => (
           <button
             key={preset.id}
-            onClick={() => onSelectPreset(preset.id)}
+            onClick={() => handleSelectPreset(preset.id)}
             className={cn(
               "group relative text-left rounded-lg border p-2.5 transition-all duration-150",
               "hover:border-primary/50 hover:bg-primary/5",

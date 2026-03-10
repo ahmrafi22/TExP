@@ -1,32 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useMemo } from "react";
+import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useMemo, useCallback } from "react";
 import { gsap } from "gsap";
 import { useTheme } from "next-themes";
 import type { AnimationConfig, BackgroundConfig } from "@/types/animation";
 import { googleFonts } from "@/lib/fonts";
-
-interface PreviewCanvasProps {
-  text: string;
-  setText: (text: string) => void;
-  animationConfig: AnimationConfig;
-  setAnimationConfig: (config: AnimationConfig) => void;
-  backgroundConfig: BackgroundConfig;
-  setBackgroundConfig: (config: BackgroundConfig) => void;
-  splitTextConfig: {
-    enabled: boolean;
-    type: "chars" | "words" | "lines";
-    stagger: number;
-    staggerFrom: "start" | "center" | "end" | "random" | "edges";
-  };
-  setSplitTextConfig: (config: {
-    enabled: boolean;
-    type: "chars" | "words" | "lines";
-    stagger: number;
-    staggerFrom: "start" | "center" | "end" | "random" | "edges";
-  }) => void;
-  onResetAll: () => void;
-}
+import { usePlaygroundStore } from "@/store/use-playground-store";
+import { useShallow } from "zustand/react/shallow";
 
 export interface PreviewCanvasRef {
   playAnimation: () => void;
@@ -80,20 +60,27 @@ const lineHeightMap: Record<string, string> = {
   loose: "2",
 };
 
-const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
-  text,
-  setText,
-  animationConfig,
-  backgroundConfig,
-  splitTextConfig,
-  onResetAll,
-}, ref) => {
+const PreviewCanvas = forwardRef<PreviewCanvasRef>((_props, ref) => {
   const textRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const { resolvedTheme } = useTheme();
 
-  const getSplitSelector = () => {
-    return splitTextConfig.type === "chars" ? ".char" : ".word";
+  // Subscribe to store slices individually to minimize re-renders
+  const text = usePlaygroundStore((s) => s.text);
+  const animationConfig = usePlaygroundStore((s) => s.animationConfig);
+  const backgroundConfig = usePlaygroundStore((s) => s.backgroundConfig);
+  const splitTextConfig = usePlaygroundStore((s) => s.splitTextConfig);
+
+  // Use refs to always have latest values for imperative methods (avoids stale closures)
+  const animationConfigRef = useRef(animationConfig);
+  const splitTextConfigRef = useRef(splitTextConfig);
+  const textValueRef = useRef(text);
+  animationConfigRef.current = animationConfig;
+  splitTextConfigRef.current = splitTextConfig;
+  textValueRef.current = text;
+
+  const getSplitSelector = (type: string) => {
+    return type === "chars" ? ".char" : ".word";
   };
 
   // All resettable style keys — used to clear stale inline styles
@@ -160,6 +147,10 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     return styles;
   }, [animationConfig.customStyles]);
 
+  // Keep a ref to the latest computedStyles so imperative methods stay fresh
+  const computedStylesRef = useRef(computedStyles);
+  computedStylesRef.current = computedStyles;
+
   const splitTextIntoElements = (element: HTMLElement, type: string) => {
     const textContent = element.textContent || "";
     element.innerHTML = "";
@@ -186,18 +177,24 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     }
   };
 
-  const resetAnimation = () => {
+  const buildFilterString = (filterConfig: { type: string; value: number }) => {
+    const { type, value } = filterConfig;
+    if (value <= 0) return null;
+    const unit = type === "blur" ? "px" : type === "saturate" ? "%" : "";
+    return `${type}(${value}${unit})`;
+  };
+
+  // Imperative methods read from refs so they always have the latest state
+  const resetAnimation = useCallback(() => {
     if (!textRef.current) return;
     gsap.killTweensOf(textRef.current);
     gsap.killTweensOf(textRef.current.children);
 
-    // Kill tweens on any existing split spans
     const existingSplits = textRef.current.querySelectorAll(".char, .word");
     if (existingSplits.length > 0) {
       gsap.killTweensOf(existingSplits);
     }
 
-    // Clear GSAP transforms on the container
     gsap.set(textRef.current, {
       clearProps: "transform,opacity,filter,rotationX,rotationY,skewX",
     });
@@ -206,33 +203,44 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     });
 
     // Re-apply custom styles on the container
-    Object.assign(textRef.current.style, computedStyles);
+    Object.assign(textRef.current.style, computedStylesRef.current);
 
     // Re-build the split DOM if split-text is enabled
-    if (splitTextConfig.enabled) {
-      textRef.current.textContent = text;
-      splitTextIntoElements(textRef.current, splitTextConfig.type);
+    const stc = splitTextConfigRef.current;
+    if (stc.enabled) {
+      textRef.current.textContent = textValueRef.current;
+      splitTextIntoElements(textRef.current, stc.type);
     }
 
     setIsAnimating(false);
-  };
+  }, []);
 
-  const buildFilterString = (filterConfig: { type: string; value: number }) => {
-    const { type, value } = filterConfig;
-    if (value <= 0) return null;
-    const unit = type === "blur" ? "px" : type === "saturate" ? "%" : "";
-    return `${type}(${value}${unit})`;
-  };
-
-  const playAnimation = () => {
+  const playAnimation = useCallback(() => {
     if (!textRef.current || isAnimating) return;
     setIsAnimating(true);
-    resetAnimation();
+
+    // Read fresh values from refs
+    const cfg = animationConfigRef.current;
+    const stc = splitTextConfigRef.current;
+
+    // First reset
+    gsap.killTweensOf(textRef.current);
+    gsap.killTweensOf(textRef.current.children);
+    const existingSplits = textRef.current.querySelectorAll(".char, .word");
+    if (existingSplits.length > 0) gsap.killTweensOf(existingSplits);
+    gsap.set(textRef.current, { clearProps: "transform,opacity,filter,rotationX,rotationY,skewX" });
+    gsap.set(textRef.current, { x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, rotationY: 0, skewX: 0, opacity: 1, filter: "none" });
+    Object.assign(textRef.current.style, computedStylesRef.current);
+
+    if (stc.enabled) {
+      textRef.current.textContent = textValueRef.current;
+      splitTextIntoElements(textRef.current, stc.type);
+    }
 
     let targets: HTMLElement | NodeListOf<Element> = textRef.current;
 
-    if (splitTextConfig.enabled) {
-      targets = textRef.current.querySelectorAll(getSplitSelector());
+    if (stc.enabled) {
+      targets = textRef.current.querySelectorAll(getSplitSelector(stc.type));
       if (targets.length === 0) {
         setIsAnimating(false);
         return;
@@ -240,40 +248,40 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     }
 
     const animationProps: any = {
-      duration: animationConfig.duration,
-      delay: animationConfig.delay,
-      ease: animationConfig.ease,
-      repeat: animationConfig.repeat,
-      yoyo: animationConfig.yoyo,
+      duration: cfg.duration,
+      delay: cfg.delay,
+      ease: cfg.ease,
+      repeat: cfg.repeat,
+      yoyo: cfg.yoyo,
       onComplete: () => setIsAnimating(false),
     };
 
-    if (splitTextConfig.enabled && splitTextConfig.stagger > 0) {
-      if (splitTextConfig.staggerFrom && splitTextConfig.staggerFrom !== "start") {
+    if (stc.enabled && stc.stagger > 0) {
+      if (stc.staggerFrom && stc.staggerFrom !== "start") {
         animationProps.stagger = {
-          each: splitTextConfig.stagger,
-          from: splitTextConfig.staggerFrom,
+          each: stc.stagger,
+          from: stc.staggerFrom,
         };
       } else {
-        animationProps.stagger = splitTextConfig.stagger;
+        animationProps.stagger = stc.stagger;
       }
     }
 
-    if (animationConfig.x !== 0) animationProps.x = animationConfig.x;
-    if (animationConfig.y !== 0) animationProps.y = animationConfig.y;
-    if (animationConfig.scale !== 1) animationProps.scale = animationConfig.scale;
-    if (animationConfig.rotation !== 0) animationProps.rotation = animationConfig.rotation;
-    if (animationConfig.rotationX !== 0) animationProps.rotationX = animationConfig.rotationX;
-    if (animationConfig.rotationY !== 0) animationProps.rotationY = animationConfig.rotationY;
-    if (animationConfig.skewX !== 0) animationProps.skewX = animationConfig.skewX;
-    if (animationConfig.opacity !== 1) animationProps.opacity = animationConfig.opacity;
+    if (cfg.x !== 0) animationProps.x = cfg.x;
+    if (cfg.y !== 0) animationProps.y = cfg.y;
+    if (cfg.scale !== 1) animationProps.scale = cfg.scale;
+    if (cfg.rotation !== 0) animationProps.rotation = cfg.rotation;
+    if (cfg.rotationX !== 0) animationProps.rotationX = cfg.rotationX;
+    if (cfg.rotationY !== 0) animationProps.rotationY = cfg.rotationY;
+    if (cfg.skewX !== 0) animationProps.skewX = cfg.skewX;
+    if (cfg.opacity !== 1) animationProps.opacity = cfg.opacity;
 
-    const filterStr = buildFilterString(animationConfig.filter);
+    const filterStr = buildFilterString(cfg.filter);
     if (filterStr) animationProps.filter = filterStr;
 
-    if (animationConfig.tweenType === "fromTo" && animationConfig.fromValues) {
+    if (cfg.tweenType === "fromTo" && cfg.fromValues) {
       const fromProps: any = {};
-      const fv = animationConfig.fromValues;
+      const fv = cfg.fromValues;
       if (fv.x !== undefined && fv.x !== 0) fromProps.x = fv.x;
       if (fv.y !== undefined && fv.y !== 0) fromProps.y = fv.y;
       if (fv.scale !== undefined && fv.scale !== 1) fromProps.scale = fv.scale;
@@ -287,16 +295,17 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
         if (fromFilter) fromProps.filter = fromFilter;
       }
       gsap.fromTo(targets, fromProps, animationProps);
-    } else if (animationConfig.tweenType === "from") {
+    } else if (cfg.tweenType === "from") {
       gsap.from(targets, animationProps);
     } else {
       gsap.to(targets, animationProps);
     }
-  };
+  }, [isAnimating]);
 
+  // Stable imperative handle — methods read from refs so they're never stale
   useImperativeHandle(ref, () => ({
-    playAnimation,
-    resetAnimation,
+    playAnimation: () => playAnimation(),
+    resetAnimation: () => resetAnimation(),
   }));
 
   // Apply text + split — use DOM manipulation only for split, React for normal
@@ -346,6 +355,11 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
     return style;
   };
 
+  // Read overflow settings as separate subscriptions so toggling overflow
+  // doesn't cause textRef or GSAP state to be touched
+  const overflowHidden = usePlaygroundStore((s) => s.animationConfig.customStyles.overflowHidden);
+  const containerOverflow = usePlaygroundStore((s) => s.animationConfig.customStyles.containerOverflow);
+
   const isAutoBackground = backgroundConfig.type === "solid" && backgroundConfig.color === "auto";
 
   return (
@@ -355,16 +369,13 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
           isAutoBackground
             ? "bg-[hsl(var(--canvas-bg))] border-[hsl(var(--canvas-border))] canvas-grid"
             : "border-border"
-        } ${animationConfig.customStyles.containerOverflow ? "overflow-hidden" : "overflow-visible"}`}
+        } ${containerOverflow ? "overflow-hidden" : "overflow-visible"}`}
         style={isAutoBackground ? {} : getBackgroundStyle()}
       >
         {/* Overflow wrapper — clips animated text when overflowHidden is on */}
         <div
-          className="flex items-center justify-center"
           style={{
-            overflow: animationConfig.customStyles.overflowHidden ? "hidden" : "visible",
-            width: "100%",
-            height: "100%",
+            overflow: overflowHidden ? "hidden" : "visible",
           }}
         >
           <div
@@ -374,7 +385,7 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef, PreviewCanvasProps>(({
               willChange: "transform, opacity, filter",
               color: animationConfig.customStyles.color === "inherit"
                 ? (isAutoBackground ? "hsl(var(--canvas-text))" : undefined)
-                : animationConfig.customStyles.color,
+                : undefined,
               ...computedStyles,
             }}
           >

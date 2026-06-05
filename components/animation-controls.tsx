@@ -258,12 +258,13 @@ function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale,
           </Select>
         </Field>
         <SliderField
-          label={`Value (${filterOpt.unit})`}
+          label="Filter Value"
           value={filterVal}
           min={filterOpt.min}
           max={filterOpt.max}
           step={filterOpt.step}
           onChange={onFilterVal}
+          suffix={filterOpt.unit}
         />
       </div>
     </div>
@@ -386,9 +387,9 @@ export default function AnimationControls() {
           step={1}
           onChange={n => set("repeat", Math.round(n))}
         />
-        <div className="flex items-center gap-2 pb-1">
+        <div className="flex items-center justify-between h-8 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors">
+          <Label htmlFor="yoyo" className="text-[11px] text-muted-foreground cursor-pointer">Yoyo</Label>
           <Checkbox id="yoyo" checked={config.yoyo} onCheckedChange={(c) => set("yoyo", c as boolean)} />
-          <Label htmlFor="yoyo" className="text-xs cursor-pointer">Yoyo</Label>
         </div>
       </div>
     </div>

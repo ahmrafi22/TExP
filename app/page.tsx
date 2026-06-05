@@ -79,7 +79,7 @@ export default function GSAPPlayground() {
   const sidebarContent = (
     <Tabs defaultValue="presets" onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
       <div className="px-3 pt-3 pb-0">
-        <TabsList className="w-full grid grid-cols-3 h-10 relative">
+        <TabsList className="w-full grid grid-cols-3 h-10 relative bg-muted/40">
           <span
             className="absolute inset-y-1 rounded-full bg-background shadow-sm transition-transform duration-300 ease-in-out"
             style={{
@@ -88,15 +88,15 @@ export default function GSAPPlayground() {
               transform: activeTab === 'animation' ? 'translateX(calc(100% + 2px))' : activeTab === 'css' ? 'translateX(calc(200% + 4px))' : 'translateX(0)',
             }}
           />
-          <TabsTrigger value="presets" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+          <TabsTrigger value="presets" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400">
             <Wand2 className="h-3.5 w-3.5" />
             Presets
           </TabsTrigger>
-          <TabsTrigger value="animation" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+          <TabsTrigger value="animation" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400">
             <Sparkles className="h-3.5 w-3.5" />
             Animate
           </TabsTrigger>
-          <TabsTrigger value="css" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+          <TabsTrigger value="css" className="text-xs gap-1.5 z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-pink-600 dark:data-[state=active]:text-pink-400">
             <Paintbrush className="h-3.5 w-3.5" />
             CSS
           </TabsTrigger>
@@ -106,6 +106,7 @@ export default function GSAPPlayground() {
       <TabsContent value="presets" className="flex-1 overflow-y-auto custom-scrollbar mt-0 px-5 py-5">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
+            <span className="h-4 w-1 rounded-full bg-gradient-to-b from-violet-500 to-fuchsia-500" />
             <Wand2 className="h-4 w-4 text-violet-500" />
             <h3 className="text-sm font-semibold">Animation Presets</h3>
           </div>
@@ -117,6 +118,7 @@ export default function GSAPPlayground() {
         <div className="space-y-7">
           <div>
             <div className="flex items-center gap-2 mb-3">
+              <span className="h-4 w-1 rounded-full bg-gradient-to-b from-violet-500 to-fuchsia-500" />
               <Sparkles className="h-4 w-4 text-violet-500" />
               <h3 className="text-sm font-semibold">Animation Properties</h3>
             </div>
@@ -125,6 +127,7 @@ export default function GSAPPlayground() {
           <Separator />
           <div>
             <div className="flex items-center gap-2 mb-3">
+              <span className="h-4 w-1 rounded-full bg-gradient-to-b from-blue-500 to-cyan-500" />
               <Type className="h-4 w-4 text-blue-500" />
               <h3 className="text-sm font-semibold">Split Text</h3>
               {splitTextEnabled && (
@@ -141,6 +144,7 @@ export default function GSAPPlayground() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
+                <span className="h-4 w-1 rounded-full bg-gradient-to-b from-pink-500 to-rose-500" />
                 <Paintbrush className="h-4 w-4 text-pink-500" />
                 <h3 className="text-sm font-semibold">Text Style</h3>
               </div>
@@ -154,6 +158,7 @@ export default function GSAPPlayground() {
           <Separator />
           <div>
             <div className="flex items-center gap-2 mb-3">
+              <span className="h-4 w-1 rounded-full bg-gradient-to-b from-amber-500 to-orange-500" />
               <Image className="h-4 w-4 text-amber-500" />
               <h3 className="text-sm font-semibold">Background</h3>
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -229,33 +234,42 @@ export default function GSAPPlayground() {
 
           {/* Play / Reset / Clear buttons */}
           <div className="flex items-center justify-center gap-3 py-3">
-            <Button
-              onClick={playAnimation}
-              disabled={isAnimating}
-              size="lg"
-              className="h-12 w-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md"
-              title="Play"
-            >
-              <Play className="h-5 w-5" />
-            </Button>
-            <Button
-              onClick={handleResetAnimation}
-              size="lg"
-              variant="outline"
-              className="h-12 w-12 rounded-full"
-              title="Reset Animation"
-            >
-              <RotateCcw className="h-5 w-5" />
-            </Button>
-            <Button
-              onClick={handleResetAll}
-              size="lg"
-              variant="ghost"
-              className="h-12 w-12 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
-              title="Clear All"
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
+            <div className="relative group">
+              <span className="absolute inset-0 rounded-full bg-emerald-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Button
+                onClick={playAnimation}
+                disabled={isAnimating}
+                size="lg"
+                className="relative h-12 w-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 ring-1 ring-emerald-600/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                title="Play animation"
+              >
+                <Play className="h-5 w-5 fill-current" />
+              </Button>
+            </div>
+            <div className="relative group">
+              <span className="absolute inset-0 rounded-full bg-blue-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Button
+                onClick={handleResetAnimation}
+                size="lg"
+                variant="outline"
+                className="relative h-12 w-12 rounded-full border-blue-500/40 text-blue-600 hover:bg-blue-500/10 hover:text-blue-600 hover:border-blue-500/60 ring-1 ring-blue-500/10 transition-all hover:scale-105 active:scale-95"
+                title="Reset animation properties"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="relative group">
+              <span className="absolute inset-0 rounded-full bg-red-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Button
+                onClick={handleResetAll}
+                size="lg"
+                variant="ghost"
+                className="relative h-12 w-12 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 ring-1 ring-destructive/20 transition-all hover:scale-105 active:scale-95"
+                title="Clear all settings"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           {/* Info bar */}

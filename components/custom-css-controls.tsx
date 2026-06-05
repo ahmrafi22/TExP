@@ -4,10 +4,10 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import type { AnimationConfig } from "@/types/animation"
 import { googleFonts, getFontCategories } from "@/lib/fonts"
 import { usePlaygroundStore } from "@/store/use-playground-store"
 import { useShallow } from "zustand/react/shallow"
+import { Palette, Pipette } from "lucide-react"
 
 export default function CustomCssControls() {
   const { config, onChange } = usePlaygroundStore(
@@ -27,19 +27,20 @@ export default function CustomCssControls() {
     })
   }
 
+  const textColorIsInherit = config.customStyles.color === "inherit"
+  const textBgIsTransparent = config.customStyles.background === "transparent"
+
   return (
     <div className="space-y-4">
       {/* Typography Row */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Font Size</Label>
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Font Size</Label>
           <Select
             value={config.customStyles.fontSize}
             onValueChange={(value) => handleStyleChange("fontSize", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="xs">XS (12px)</SelectItem>
               <SelectItem value="sm">SM (14px)</SelectItem>
@@ -59,14 +60,12 @@ export default function CustomCssControls() {
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Font Weight</Label>
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Font Weight</Label>
           <Select
             value={config.customStyles.fontWeight}
             onValueChange={(value) => handleStyleChange("fontWeight", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="thin">Thin (100)</SelectItem>
               <SelectItem value="extralight">Extra Light (200)</SelectItem>
@@ -81,15 +80,13 @@ export default function CustomCssControls() {
           </Select>
         </div>
 
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Font Family</Label>
+        <div className="col-span-2">
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Font Family</Label>
           <Select
             value={config.customStyles.fontFamily}
             onValueChange={(value) => handleStyleChange("fontFamily", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent className="max-h-[300px]">
               <SelectGroup>
                 <SelectLabel className="text-[10px]">Generic</SelectLabel>
@@ -115,14 +112,12 @@ export default function CustomCssControls() {
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Letter Spacing</Label>
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Letter Spacing</Label>
           <Select
             value={config.customStyles.letterSpacing}
             onValueChange={(value) => handleStyleChange("letterSpacing", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="tighter">Tighter</SelectItem>
               <SelectItem value="tight">Tight</SelectItem>
@@ -135,14 +130,12 @@ export default function CustomCssControls() {
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Line Height</Label>
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Line Height</Label>
           <Select
             value={config.customStyles.lineHeight}
             onValueChange={(value) => handleStyleChange("lineHeight", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None (1)</SelectItem>
               <SelectItem value="tight">Tight (1.25)</SelectItem>
@@ -155,14 +148,12 @@ export default function CustomCssControls() {
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Text Transform</Label>
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Text Transform</Label>
           <Select
             value={config.customStyles.textTransform}
             onValueChange={(value) => handleStyleChange("textTransform", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
               <SelectItem value="uppercase">UPPERCASE</SelectItem>
@@ -172,15 +163,13 @@ export default function CustomCssControls() {
           </Select>
         </div>
 
-        <div className="col-span-2">
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Text Decoration</Label>
+        <div>
+          <Label className="text-[11px] text-muted-foreground mb-1 block">Text Decoration</Label>
           <Select
             value={config.customStyles.textDecoration}
             onValueChange={(value) => handleStyleChange("textDecoration", value)}
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
               <SelectItem value="underline">Underline</SelectItem>
@@ -192,42 +181,68 @@ export default function CustomCssControls() {
       </div>
 
       {/* Colors */}
-      <div className="space-y-3 pt-1">
+      <div className="space-y-2.5 pt-1">
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Text Color</Label>
-          <div className="flex gap-2 items-center">
-            <Input
-              type="color"
-              value={config.customStyles.color === "inherit" ? "#000000" : config.customStyles.color}
-              onChange={(e) => handleStyleChange("color", e.target.value)}
-              className="h-8 w-14 p-1 cursor-pointer"
-            />
-            <code className="text-[10px] text-muted-foreground font-mono flex-1 truncate">
-              {config.customStyles.color}
-            </code>
+          <div className="flex items-center justify-between mb-1">
+            <Label className="text-[11px] text-muted-foreground">Text Color</Label>
             <button
               onClick={() => handleStyleChange("color", "inherit")}
-              className="h-7 px-2.5 text-[10px] font-medium rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
+              className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Auto
+              {textColorIsInherit ? "✓ Auto" : "Use Auto"}
             </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative shrink-0">
+              <Input
+                type="color"
+                value={textColorIsInherit ? "#000000" : config.customStyles.color}
+                onChange={(e) => handleStyleChange("color", e.target.value)}
+                className="h-9 w-12 p-0.5 cursor-pointer rounded-md overflow-hidden border border-input"
+                disabled={textColorIsInherit}
+              />
+              {textColorIsInherit && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-md pointer-events-none">
+                  <Pipette className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 h-9 px-2.5 flex items-center rounded-md border border-input bg-muted/30 text-[11px] font-mono text-muted-foreground">
+              {config.customStyles.color}
+            </div>
           </div>
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Text Background</Label>
-          <div className="flex gap-2 items-center">
-            <Input
-              type="color"
-              value={config.customStyles.background === "transparent" ? "#ffffff" : config.customStyles.background}
-              onChange={(e) => handleStyleChange("background", e.target.value)}
-              className="h-8 w-14 p-1 cursor-pointer"
-            />
+          <div className="flex items-center justify-between mb-1">
+            <Label className="text-[11px] text-muted-foreground">Text Background</Label>
+            <button
+              onClick={() => handleStyleChange("background", "transparent")}
+              className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {textBgIsTransparent ? "✓ Transparent" : "Clear"}
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative shrink-0">
+              <Input
+                type="color"
+                value={textBgIsTransparent ? "#ffffff" : config.customStyles.background}
+                onChange={(e) => handleStyleChange("background", e.target.value)}
+                className="h-9 w-12 p-0.5 cursor-pointer rounded-md overflow-hidden border border-input"
+                disabled={textBgIsTransparent}
+              />
+              {textBgIsTransparent && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-md pointer-events-none">
+                  <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
+            </div>
             <Input
               type="text"
               value={config.customStyles.background}
               onChange={(e) => handleStyleChange("background", e.target.value)}
-              className="h-8 text-xs flex-1"
+              className="h-9 text-xs flex-1 font-mono"
               placeholder="transparent"
             />
           </div>
@@ -235,17 +250,25 @@ export default function CustomCssControls() {
       </div>
 
       {/* Overflow toggles */}
-      <div className="space-y-3 pt-1">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">Text Overflow Hidden</Label>
+      <div className="space-y-1.5 pt-1">
+        <div className="flex items-center justify-between h-9 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors">
+          <div>
+            <Label htmlFor="overflow-hidden" className="text-[11px] font-medium cursor-pointer">Text Overflow</Label>
+            <p className="text-[10px] text-muted-foreground leading-tight">Clips animated text</p>
+          </div>
           <Switch
+            id="overflow-hidden"
             checked={config.customStyles.overflowHidden}
             onCheckedChange={(checked) => handleStyleChange("overflowHidden", checked)}
           />
         </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">Container Overflow Hidden</Label>
+        <div className="flex items-center justify-between h-9 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors">
+          <div>
+            <Label htmlFor="container-overflow" className="text-[11px] font-medium cursor-pointer">Container Overflow</Label>
+            <p className="text-[10px] text-muted-foreground leading-tight">Hides box edges</p>
+          </div>
           <Switch
+            id="container-overflow"
             checked={config.customStyles.containerOverflow}
             onCheckedChange={(checked) => handleStyleChange("containerOverflow", checked)}
           />

@@ -414,7 +414,7 @@ export default function PreviewCanvas({
         </div>
 
         <div className="mt-6">
-          <TextInput text={text} onChange={setText} />
+          <TextInput />
         </div>
       </div>
     </div>

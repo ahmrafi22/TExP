@@ -29,7 +29,7 @@ const filterOptions = [
 ]
 
 // ── Figma-style slider + number input ─────────────────────────────────────────
-interface SliderFieldProps {
+export interface SliderFieldProps {
   label: string
   value: number
   min: number
@@ -40,7 +40,7 @@ interface SliderFieldProps {
   className?: string
 }
 
-function SliderField({ label, value, min, max, step, onChange, suffix, className = "" }: SliderFieldProps) {
+export function SliderField({ label, value, min, max, step, onChange, suffix, className = "" }: SliderFieldProps) {
   const [str, setStr] = useState(String(value))
   const focused = useRef(false)
 
@@ -54,13 +54,13 @@ function SliderField({ label, value, min, max, step, onChange, suffix, className
   const pct = max === min ? 0 : ((clamped - min) / (max - min)) * 100
 
   return (
-    <div className={`space-y-1 ${className}`}>
+    <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center justify-between">
-        <Label className="text-[11px] text-muted-foreground">{label}</Label>
-        {suffix && <span className="text-[10px] text-muted-foreground/60">{suffix}</span>}
+        <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide">{label}</Label>
+        {suffix && <span className="text-[10px] font-mono text-muted-foreground/60">{suffix}</span>}
       </div>
-      <div className="flex items-center gap-2.5">
-        <div className="relative flex-1 h-8 flex items-center">
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 h-7 flex items-center group">
           <input
             type="range"
             min={min}
@@ -71,10 +71,15 @@ function SliderField({ label, value, min, max, step, onChange, suffix, className
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           />
           {/* Custom track */}
-          <div className="w-full h-[4px] rounded-full relative pointer-events-none" style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--muted)) ${pct}%)` }}>
+          <div 
+            className="w-full h-[3px] rounded-full relative pointer-events-none transition-colors" 
+            style={{ 
+              background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--border) / 0.8) ${pct}%)` 
+            }}
+          >
             {/* Custom thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-[14px] h-[14px] rounded-full bg-primary border-2 border-background shadow-md pointer-events-none transition-[left] duration-75"
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-background border-[2.5px] border-primary shadow-sm pointer-events-none transition-transform duration-75 group-hover:scale-110 active:scale-95"
               style={{ left: `calc(${pct}% - 7px)` }}
             />
           </div>
@@ -100,8 +105,8 @@ function SliderField({ label, value, min, max, step, onChange, suffix, className
               setStr(String(value))
             }
           }}
-          className="w-[54px] h-8 text-center text-[11px] bg-muted/50 border border-input rounded-md
-            px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/60
+          className="w-14 h-7 text-center font-mono text-[10px] bg-muted/40 border border-border/70 rounded-md
+            px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/50 hover:bg-muted/60 transition-all
             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </div>
@@ -140,24 +145,24 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
   const commit = (n: number) => onChange(unit === "%" ? `${n}%` : n)
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <Label className="text-[11px] text-muted-foreground">{label}</Label>
-        <div className="flex border border-input rounded overflow-hidden leading-none">
+        <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide">{label}</Label>
+        <div className="flex bg-muted/50 p-0.5 rounded-md border border-border/40 leading-none">
           <button
             type="button"
             onClick={() => { onUnitChange("px"); onChange(numVal) }}
-            className={`px-1.5 py-[2px] text-[10px] transition-colors ${unit === "px" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-all ${unit === "px" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground/60 hover:text-foreground"}`}
           >px</button>
           <button
             type="button"
             onClick={() => { onUnitChange("%"); onChange(`${numVal}%`) }}
-            className={`px-1.5 py-[2px] text-[10px] border-l border-input transition-colors ${unit === "%" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-all ${unit === "%" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground/60 hover:text-foreground"}`}
           >%</button>
         </div>
       </div>
-      <div className="flex items-center gap-2.5">
-        <div className="relative flex-1 h-8 flex items-center">
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 h-7 flex items-center group">
           <input
             type="range"
             min={min}
@@ -168,10 +173,15 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           />
           {/* Custom track */}
-          <div className="w-full h-[4px] rounded-full relative pointer-events-none" style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--muted)) ${pct}%)` }}>
+          <div 
+            className="w-full h-[3px] rounded-full relative pointer-events-none transition-colors" 
+            style={{ 
+              background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--border) / 0.8) ${pct}%)` 
+            }}
+          >
             {/* Custom thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-[14px] h-[14px] rounded-full bg-primary border-2 border-background shadow-md pointer-events-none transition-[left] duration-75"
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-background border-[2.5px] border-primary shadow-sm pointer-events-none transition-transform duration-75 group-hover:scale-110 active:scale-95"
               style={{ left: `calc(${pct}% - 7px)` }}
             />
           </div>
@@ -197,8 +207,8 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
               setStr(String(numVal))
             }
           }}
-          className="w-[54px] h-8 text-center text-[11px] bg-muted/50 border border-input rounded-md
-            px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/60
+          className="w-14 h-7 text-center font-mono text-[10px] bg-muted/40 border border-border/70 rounded-md
+            px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/50 hover:bg-muted/60 transition-all
             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       </div>
@@ -210,7 +220,7 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
 function Field({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
   return (
     <div className={className}>
-      <Label className="text-[11px] text-muted-foreground mb-1 block">{label}</Label>
+      <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">{label}</Label>
       {children}
     </div>
   )
@@ -235,30 +245,32 @@ function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale,
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <PosSliderField label="X" value={xVal} unit={xUnit} onUnitChange={onXUnit} onChange={onX} />
-        <PosSliderField label="Y" value={yVal} unit={yUnit} onUnitChange={onYUnit} onChange={onY} />
+        <PosSliderField label="Offset X" value={xVal} unit={xUnit} onUnitChange={onXUnit} onChange={onX} />
+        <PosSliderField label="Offset Y" value={yVal} unit={yUnit} onUnitChange={onYUnit} onChange={onY} />
       </div>
       <div className="grid grid-cols-3 gap-x-3 gap-y-3">
         <SliderField label="Scale" value={scale} min={0} max={5} step={0.05} onChange={onScale} />
-        <SliderField label="Rotation °" value={rotation} min={-360} max={360} step={1} onChange={onRot} />
+        <SliderField label="Rotate" value={rotation} min={-360} max={360} step={1} onChange={onRot} suffix="°" />
         <SliderField label="Opacity" value={opacity} min={0} max={1} step={0.01} onChange={onOp} />
       </div>
       <div className="grid grid-cols-3 gap-x-3 gap-y-3">
-        <SliderField label="Rotate X °" value={rotationX} min={-360} max={360} step={1} onChange={onRotX} />
-        <SliderField label="Rotate Y °" value={rotationY} min={-360} max={360} step={1} onChange={onRotY} />
-        <SliderField label="Skew X °" value={skewX} min={-90} max={90} step={1} onChange={onSkewX} />
+        <SliderField label="Rotate X" value={rotationX} min={-360} max={360} step={1} onChange={onRotX} suffix="°" />
+        <SliderField label="Rotate Y" value={rotationY} min={-360} max={360} step={1} onChange={onRotY} suffix="°" />
+        <SliderField label="Skew X" value={skewX} min={-90} max={90} step={1} onChange={onSkewX} suffix="°" />
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-end">
-        <Field label="Filter">
+        <Field label="Filter Type">
           <Select value={filterType} onValueChange={onFilterType}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               {filterOptions.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </Field>
         <SliderField
-          label="Filter Value"
+          label="Filter Int."
           value={filterVal}
           min={filterOpt.min}
           max={filterOpt.max}
@@ -293,22 +305,26 @@ export default function AnimationControls() {
   }, [config, onChange])
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Tween type + easing */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3.5">
         <Field label="Tween Type">
           <Select value={config.tweenType} onValueChange={(v: "from" | "to" | "fromTo") => set("tweenType", v)}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              <SelectItem value="to">To</SelectItem>
-              <SelectItem value="from">From</SelectItem>
-              <SelectItem value="fromTo">FromTo</SelectItem>
+              <SelectItem value="to">To (End State)</SelectItem>
+              <SelectItem value="from">From (Start State)</SelectItem>
+              <SelectItem value="fromTo">From-To</SelectItem>
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Easing">
+        <Field label="Easing Curve">
           <Select value={config.ease} onValueChange={(v) => set("ease", v)}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               {easingOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
             </SelectContent>
@@ -317,16 +333,16 @@ export default function AnimationControls() {
       </div>
 
       {/* Duration + Delay */}
-      <div className="grid grid-cols-2 gap-4">
-        <SliderField label="Duration (s)" value={config.duration} min={0.1} max={10} step={0.1} onChange={n => set("duration", n)} />
-        <SliderField label="Delay (s)" value={config.delay} min={0} max={5} step={0.1} onChange={n => set("delay", n)} />
+      <div className="grid grid-cols-2 gap-3.5">
+        <SliderField label="Duration" value={config.duration} min={0.1} max={10} step={0.1} onChange={n => set("duration", n)} suffix="s" />
+        <SliderField label="Delay" value={config.delay} min={0} max={5} step={0.1} onChange={n => set("delay", n)} suffix="s" />
       </div>
 
       {/* Property grid — split for fromTo, single otherwise */}
       {config.tweenType === "fromTo" ? (
-        <div className="space-y-3">
-          <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-3">
-            <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mb-3">From Values</p>
+        <div className="space-y-4 pt-1">
+          <div className="relative rounded-xl border border-blue-500/15 bg-blue-500/[0.02] p-4 pl-5 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-1 before:rounded-r-md before:bg-blue-500/80">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-3.5">From (Initial Properties)</p>
             <PropGrid
               xVal={config.fromValues?.x ?? 0} xUnit={fromXUnit} onXUnit={setFromXUnit} onX={v => setFrom("x", v)}
               yVal={config.fromValues?.y ?? 0} yUnit={fromYUnit} onYUnit={setFromYUnit} onY={v => setFrom("y", v)}
@@ -342,8 +358,8 @@ export default function AnimationControls() {
               onFilterVal={n => setFrom("filter", { type: config.fromValues?.filter?.type ?? "blur", value: n })}
             />
           </div>
-          <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 p-3">
-            <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-3">To Values</p>
+          <div className="relative rounded-xl border border-emerald-500/15 bg-emerald-500/[0.02] p-4 pl-5 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-1 before:rounded-r-md before:bg-emerald-500/80">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-3.5">To (Target Properties)</p>
             <PropGrid
               xVal={config.x} xUnit={xUnit} onXUnit={setXUnit} onX={v => set("x", v)}
               yVal={config.y} yUnit={yUnit} onYUnit={setYUnit} onY={v => set("y", v)}
@@ -378,18 +394,19 @@ export default function AnimationControls() {
       )}
 
       {/* Repeat + Yoyo */}
-      <div className="grid grid-cols-2 gap-4 items-end">
+      <div className="grid grid-cols-2 gap-3.5 items-end pt-1">
         <SliderField
-          label="Repeat (−1 = ∞)"
+          label="Repeat Loops"
           value={config.repeat}
           min={-1}
           max={20}
           step={1}
           onChange={n => set("repeat", Math.round(n))}
+          suffix="-1 = ∞"
         />
-        <div className="flex items-center justify-between h-8 px-3 rounded-md border border-input bg-muted/30 hover:bg-muted/50 transition-colors">
-          <Label htmlFor="yoyo" className="text-[11px] text-muted-foreground cursor-pointer">Yoyo</Label>
-          <Checkbox id="yoyo" checked={config.yoyo} onCheckedChange={(c) => set("yoyo", c as boolean)} />
+        <div className="flex items-center justify-between h-7 px-2.5 rounded-md border border-border/80 bg-muted/40 hover:bg-muted/60 hover:border-border transition-all cursor-pointer">
+          <Label htmlFor="yoyo" className="text-[11px] font-medium text-muted-foreground cursor-pointer">Yoyo Loop</Label>
+          <Checkbox id="yoyo" checked={config.yoyo} onCheckedChange={(c) => set("yoyo", c as boolean)} className="h-3.5 w-3.5 rounded border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
         </div>
       </div>
     </div>

@@ -57,8 +57,8 @@ TEXP is a modern, interactive text animation generator that empowers designers a
 
 | Technology | Purpose |
 |-----------|---------|
-| **Next.js 14** | Full-stack React framework |
-| **React 18** | UI component library |
+| **Next.js 15** | Full-stack React framework |
+| **React 19** | UI component library |
 | **TypeScript** | Type-safe development |
 | **Tailwind CSS** | Utility-first styling |
 | **shadcn/ui** | High-quality UI components |
@@ -78,7 +78,7 @@ TEXP is a modern, interactive text animation generator that empowers designers a
 git clone https://github.com/yourusername/texp.git
 
 # Navigate to project
-cd gsap-playground
+cd TExP
 
 # Install dependencies
 pnpm install

@@ -87,3 +87,16 @@ export interface CodeGenerationParams {
   framework: "vanilla" | "react" | "vue"
   language: "js" | "ts"
 }
+
+export interface HistoryEntry {
+  id: string
+  timestamp: number
+  label: string
+  state: {
+    text: string
+    animationConfig: AnimationConfig
+    backgroundConfig: BackgroundConfig
+    splitTextConfig: SplitTextConfig
+  }
+}
+

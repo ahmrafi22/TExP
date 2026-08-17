@@ -17,6 +17,7 @@ export default function BackgroundControls() {
       onChange: s.setBackgroundConfig,
     })),
   )
+
   const handleTypeChange = (type: "solid" | "gradient" | "image") => {
     if (type === "solid" && config.type !== "solid") {
       onChange({ ...config, type, color: "auto" })
@@ -53,124 +54,153 @@ export default function BackgroundControls() {
   return (
     <div className="space-y-4">
       <div>
-        <Label className="text-[11px] text-muted-foreground mb-1 block">Background Type</Label>
+        <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Background Style</Label>
         <Select value={config.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="solid">Solid Color</SelectItem>
-            <SelectItem value="gradient">Gradient</SelectItem>
-            <SelectItem value="image">Image</SelectItem>
+            <SelectItem value="gradient">Gradient Fill</SelectItem>
+            <SelectItem value="image">Image Artboard</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {config.type === "solid" && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/40 border border-border">
+        <div className="space-y-3.5 pt-1.5 animate-fade-in duration-200">
+          <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/30 border border-border/60">
             <button
+              type="button"
               onClick={() => handleColorChange("auto")}
-              className={`flex-1 h-7 px-3 text-[11px] font-medium rounded-md transition-all ${
+              className={`flex-1 h-7 text-[11px] font-semibold rounded-md transition-all ${
                 config.color === "auto"
-                  ? "bg-background shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground/60 hover:text-foreground"
               }`}
             >
               Auto (Theme)
             </button>
             <button
+              type="button"
               onClick={() => handleColorChange("#ffffff")}
-              className={`flex-1 h-7 px-3 text-[11px] font-medium rounded-md transition-all ${
+              className={`flex-1 h-7 text-[11px] font-semibold rounded-md transition-all ${
                 config.color !== "auto"
-                  ? "bg-background shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground/60 hover:text-foreground"
               }`}
             >
-              Custom
+              Custom HEX
             </button>
           </div>
           {config.color !== "auto" && (
-            <div className="flex items-center gap-2.5">
-              <div className="relative">
+            <div className="flex items-center gap-2">
+              <div className="relative shrink-0">
                 <Input
                   type="color"
-                  value={config.color}
+                  value={config.color.startsWith("#") ? config.color : "#ffffff"}
                   onChange={(e) => handleColorChange(e.target.value)}
-                  className="h-9 w-12 p-0.5 cursor-pointer rounded-md overflow-hidden border border-input"
+                  className="h-8 w-10 p-0 cursor-pointer rounded-md border border-border/80 bg-transparent"
                 />
               </div>
-              <div className="flex-1 flex items-center h-9 px-2.5 rounded-md border border-input bg-muted/30 text-[11px] font-mono text-muted-foreground">
-                {config.color.toUpperCase()}
-              </div>
+              <Input
+                type="text"
+                value={config.color}
+                onChange={(e) => handleColorChange(e.target.value)}
+                className="h-8 text-xs font-mono flex-1 bg-muted/40 border-border/80 focus-visible:ring-primary/40 focus-visible:border-primary/50"
+                placeholder="#ffffff"
+              />
             </div>
           )}
         </div>
       )}
 
       {config.type === "gradient" && (
-        <div className="space-y-3">
+        <div className="space-y-4 pt-1.5 animate-fade-in duration-200">
           <div
-            className="h-12 rounded-lg border border-border"
+            className="h-10 rounded-lg border border-border/60 shadow-inner relative overflow-hidden"
             style={{
               background: config.gradient.type === "radial"
                 ? `radial-gradient(${config.gradient.direction}, ${config.gradient.colors.join(", ")})`
                 : `linear-gradient(${config.gradient.direction}, ${config.gradient.colors.join(", ")})`,
             }}
             aria-label="Gradient preview"
-          />
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:8px_8px] opacity-30 pointer-events-none" />
+          </div>
+
           <div>
-            <Label className="text-[11px] text-muted-foreground mb-1 block">Gradient Type</Label>
+            <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Gradient Type</Label>
             <Select
               value={config.gradient.type}
               onValueChange={(type: "linear" | "radial") => handleGradientChange({ type })}
             >
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="linear">Linear</SelectItem>
-                <SelectItem value="radial">Radial</SelectItem>
+                <SelectItem value="linear">Linear Gradient</SelectItem>
+                <SelectItem value="radial">Radial Gradient</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="space-y-1">
-              <Label className="text-[11px] text-muted-foreground">Color 1</Label>
+
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide">Color Start</Label>
               <div className="flex items-center gap-1.5">
                 <Input
                   type="color"
+                  value={config.gradient.colors[0].startsWith("#") ? config.gradient.colors[0] : "#ffffff"}
+                  onChange={(e) =>
+                    handleGradientChange({ colors: [e.target.value, config.gradient.colors[1]] })
+                  }
+                  className="h-8 w-10 p-0 cursor-pointer rounded-md border border-border/80 bg-transparent"
+                />
+                <Input
+                  type="text"
                   value={config.gradient.colors[0]}
                   onChange={(e) =>
                     handleGradientChange({ colors: [e.target.value, config.gradient.colors[1]] })
                   }
-                  className="h-9 w-10 p-0.5 cursor-pointer rounded-md overflow-hidden border border-input"
+                  className="h-8 text-xs font-mono flex-1 bg-muted/40 border-border/80 focus-visible:ring-primary/40 focus-visible:border-primary/50"
+                  placeholder="#ffffff"
                 />
-                <div className="flex-1 h-9 px-2 flex items-center rounded-md border border-input bg-muted/30 text-[10px] font-mono text-muted-foreground truncate">
-                  {config.gradient.colors[0].toUpperCase()}
-                </div>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-[11px] text-muted-foreground">Color 2</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide">Color End</Label>
               <div className="flex items-center gap-1.5">
                 <Input
                   type="color"
+                  value={config.gradient.colors[1].startsWith("#") ? config.gradient.colors[1] : "#ffffff"}
+                  onChange={(e) =>
+                    handleGradientChange({ colors: [config.gradient.colors[0], e.target.value] })
+                  }
+                  className="h-8 w-10 p-0 cursor-pointer rounded-md border border-border/80 bg-transparent"
+                />
+                <Input
+                  type="text"
                   value={config.gradient.colors[1]}
                   onChange={(e) =>
                     handleGradientChange({ colors: [config.gradient.colors[0], e.target.value] })
                   }
-                  className="h-9 w-10 p-0.5 cursor-pointer rounded-md overflow-hidden border border-input"
+                  className="h-8 text-xs font-mono flex-1 bg-muted/40 border-border/80 focus-visible:ring-primary/40 focus-visible:border-primary/50"
+                  placeholder="#ffffff"
                 />
-                <div className="flex-1 h-9 px-2 flex items-center rounded-md border border-input bg-muted/30 text-[10px] font-mono text-muted-foreground truncate">
-                  {config.gradient.colors[1].toUpperCase()}
-                </div>
               </div>
             </div>
           </div>
+
           <div>
-            <Label className="text-[11px] text-muted-foreground mb-1 block">Direction</Label>
+            <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Direction & Spread</Label>
             <Select
               value={config.gradient.direction}
               onValueChange={(direction) => handleGradientChange({ direction })}
             >
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {config.gradient.type === "linear" ? (
                   <>
@@ -182,20 +212,20 @@ export default function BackgroundControls() {
                     <SelectItem value="to bottom left">To Bottom Left ↙</SelectItem>
                     <SelectItem value="to top right">To Top Right ↗</SelectItem>
                     <SelectItem value="to top left">To Top Left ↖</SelectItem>
-                    <SelectItem value="45deg">45°</SelectItem>
-                    <SelectItem value="90deg">90°</SelectItem>
-                    <SelectItem value="135deg">135°</SelectItem>
-                    <SelectItem value="180deg">180°</SelectItem>
+                    <SelectItem value="45deg">45° Angle</SelectItem>
+                    <SelectItem value="90deg">90° Angle</SelectItem>
+                    <SelectItem value="135deg">135° Angle</SelectItem>
+                    <SelectItem value="180deg">180° Angle</SelectItem>
                   </>
                 ) : (
                   <>
-                    <SelectItem value="circle">Circle</SelectItem>
-                    <SelectItem value="ellipse">Ellipse</SelectItem>
-                    <SelectItem value="circle at center">Circle at Center</SelectItem>
-                    <SelectItem value="circle at top">Circle at Top</SelectItem>
-                    <SelectItem value="circle at bottom">Circle at Bottom</SelectItem>
-                    <SelectItem value="circle at left">Circle at Left</SelectItem>
-                    <SelectItem value="circle at right">Circle at Right</SelectItem>
+                    <SelectItem value="circle">Circle Center</SelectItem>
+                    <SelectItem value="ellipse">Ellipse Shape</SelectItem>
+                    <SelectItem value="circle at center">Circular (Absolute Center)</SelectItem>
+                    <SelectItem value="circle at top">Circular (Top Origin)</SelectItem>
+                    <SelectItem value="circle at bottom">Circular (Bottom Origin)</SelectItem>
+                    <SelectItem value="circle at left">Circular (Left Origin)</SelectItem>
+                    <SelectItem value="circle at right">Circular (Right Origin)</SelectItem>
                   </>
                 )}
               </SelectContent>
@@ -205,36 +235,37 @@ export default function BackgroundControls() {
       )}
 
       {config.type === "image" && (
-        <div className="space-y-2.5">
+        <div className="space-y-3 pt-1.5 animate-fade-in duration-200">
           {config.image ? (
-            <div className="relative rounded-lg overflow-hidden border border-border group">
+            <div className="relative rounded-xl overflow-hidden border border-border/60 group shadow-md">
               <img
                 src={config.image}
                 alt="Background preview"
                 className="w-full h-32 object-cover"
               />
               <button
+                type="button"
                 onClick={clearImage}
-                className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors"
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/90 backdrop-blur-md border border-border/60 flex items-center justify-center text-foreground hover:bg-destructive hover:text-white hover:border-destructive transition-all shadow-md active:scale-95"
                 aria-label="Remove image"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
-            <div className="h-32 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
-              <ImageIcon className="h-6 w-6" />
-              <p className="text-[11px]">No image selected</p>
+            <div className="h-32 rounded-xl border-2 border-dashed border-border/60 hover:border-border/100 bg-muted/10 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground/60">
+              <ImageIcon className="h-6 w-6 text-muted-foreground/45" />
+              <p className="text-[11px] font-medium">Select background image</p>
             </div>
           )}
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="image-upload" />
           <Button
             variant="outline"
             onClick={() => document.getElementById("image-upload")?.click()}
-            className="w-full h-8 text-xs"
+            className="w-full h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors shadow-xs"
           >
-            <Upload className="w-3 h-3 mr-1.5" />
-            {config.image ? "Replace Image" : "Choose Image"}
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            {config.image ? "Replace Image" : "Choose Image File"}
           </Button>
         </div>
       )}

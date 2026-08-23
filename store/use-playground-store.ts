@@ -12,6 +12,7 @@ export const defaultAnimationConfig: AnimationConfig = {
   rotationX: 0,
   rotationY: 0,
   skewX: 0,
+  skewY: 0,
   opacity: 1,
   duration: 1,
   delay: 0,
@@ -29,6 +30,7 @@ export const defaultAnimationConfig: AnimationConfig = {
     rotationX: 0,
     rotationY: 0,
     skewX: 0,
+    skewY: 0,
     opacity: 1,
     filter: { type: "blur", value: 0 },
   },
@@ -85,7 +87,7 @@ interface PlaygroundState {
   selectedLanguage: "js" | "ts"
   activeTab: string
   sidebarOpen: boolean
-  zoomLevel: number // 50 to 200
+  activeMode: "text" | "timeline" // top-level mode switcher
 
   // actions
   setText: (text: string, label?: string) => void
@@ -98,9 +100,12 @@ interface PlaygroundState {
   setSelectedLanguage: (lang: "js" | "ts") => void
   setActiveTab: (tab: string) => void
   setSidebarOpen: (open: boolean) => void
-  setZoomLevel: (zoom: number) => void
+  setActiveMode: (mode: "text" | "timeline") => void
 
   // history actions
+  _flushPendingTextHistory: () => void
+  _pendingTextRecord?: boolean
+  _textHistoryTimer?: ReturnType<typeof setTimeout> | null
   _recordHistory: (label: string, newState: { text: string; animationConfig: AnimationConfig; backgroundConfig: BackgroundConfig; splitTextConfig: SplitTextConfig }) => void
   undo: () => void
   redo: () => void
@@ -115,12 +120,19 @@ interface PlaygroundState {
 }
 
 const MAX_HISTORY = 30
+const TEXT_HISTORY_DEBOUNCE_MS = 600
+
+function deepClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value))
+}
 
 export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   // initial state
+  // Deep-clone defaults so nested objects (fromValues, customStyles, filter,
+  // gradient) are never shared with the module-level constants.
   text: "Hello GSAP!",
-  animationConfig: { ...defaultAnimationConfig },
-  backgroundConfig: { ...defaultBackgroundConfig },
+  animationConfig: deepClone(defaultAnimationConfig),
+  backgroundConfig: deepClone(defaultBackgroundConfig),
   splitTextConfig: { ...defaultSplitTextConfig },
   activePresetId: null,
   isAnimating: false,
@@ -128,7 +140,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   selectedLanguage: "ts",
   activeTab: "presets",
   sidebarOpen: false,
-  zoomLevel: 100,
+  activeMode: "text",
 
   history: [
     {
@@ -137,16 +149,40 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
       label: "Initial state",
       state: {
         text: "Hello GSAP!",
-        animationConfig: { ...defaultAnimationConfig },
-        backgroundConfig: { ...defaultBackgroundConfig },
+        animationConfig: deepClone(defaultAnimationConfig),
+        backgroundConfig: deepClone(defaultBackgroundConfig),
         splitTextConfig: { ...defaultSplitTextConfig },
       },
     },
   ],
   historyIndex: 0,
 
+  /**
+   * Text edits fire per keystroke; without debouncing, typing a sentence floods
+   * the whole 30-entry history. Edits are coalesced into one entry after a
+   * short pause. The flush runs before every other recorded action (and before
+   * undo/redo/jumps) so relative ordering is preserved.
+   */
+  _flushPendingTextHistory: () => {
+    const s = get() as PlaygroundState & { _textHistoryTimer?: ReturnType<typeof setTimeout> | null }
+    if (s._textHistoryTimer) {
+      clearTimeout(s._textHistoryTimer)
+      s._textHistoryTimer = null
+    }
+    if (s._pendingTextRecord) {
+      s._pendingTextRecord = false
+      s._recordHistory("Update text", {
+        text: s.text,
+        animationConfig: s.animationConfig,
+        backgroundConfig: s.backgroundConfig,
+        splitTextConfig: s.splitTextConfig,
+      })
+    }
+  },
+
   // helper to record history
-  _recordHistory: (label: string, newState: { text: string; animationConfig: AnimationConfig; backgroundConfig: BackgroundConfig; splitTextConfig: SplitTextConfig }) => {
+  _recordHistory: (label, newState) => {
+    ;(get() as PlaygroundState & { _flushPendingTextHistory: () => void })._flushPendingTextHistory()
     const { history, historyIndex } = get()
     const sliced = history.slice(0, historyIndex + 1)
     if (sliced.length >= MAX_HISTORY) {
@@ -165,11 +201,14 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   },
 
   // simple setters with history recording
-  setText: (text, label = "Update text") => {
-    const state = get()
-    const newState = { text, animationConfig: state.animationConfig, backgroundConfig: state.backgroundConfig, splitTextConfig: state.splitTextConfig }
-    state._recordHistory(label, newState)
+  setText: (text) => {
     set({ text })
+    const s = get() as PlaygroundState & { _textHistoryTimer?: ReturnType<typeof setTimeout> | null; _pendingTextRecord?: boolean }
+    s._pendingTextRecord = true
+    if (s._textHistoryTimer) clearTimeout(s._textHistoryTimer)
+    s._textHistoryTimer = setTimeout(() => {
+      ;(get() as PlaygroundState & { _flushPendingTextHistory: () => void })._flushPendingTextHistory()
+    }, TEXT_HISTORY_DEBOUNCE_MS)
   },
 
   setAnimationConfig: (animationConfig, label = "Update animation properties") => {
@@ -199,52 +238,56 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   setSelectedLanguage: (lang) => set({ selectedLanguage: lang }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
+  setActiveMode: (mode) => set({ activeMode: mode }),
 
   // History navigation
   undo: () => {
+    get()._flushPendingTextHistory()
     const { history, historyIndex } = get()
     if (historyIndex > 0) {
       const target = history[historyIndex - 1]
       set({
         historyIndex: historyIndex - 1,
         text: target.state.text,
-        animationConfig: JSON.parse(JSON.stringify(target.state.animationConfig)),
-        backgroundConfig: JSON.parse(JSON.stringify(target.state.backgroundConfig)),
-        splitTextConfig: JSON.parse(JSON.stringify(target.state.splitTextConfig)),
+        animationConfig: deepClone(target.state.animationConfig),
+        backgroundConfig: deepClone(target.state.backgroundConfig),
+        splitTextConfig: deepClone(target.state.splitTextConfig),
       })
     }
   },
 
   redo: () => {
+    get()._flushPendingTextHistory()
     const { history, historyIndex } = get()
     if (historyIndex < history.length - 1) {
       const target = history[historyIndex + 1]
       set({
         historyIndex: historyIndex + 1,
         text: target.state.text,
-        animationConfig: JSON.parse(JSON.stringify(target.state.animationConfig)),
-        backgroundConfig: JSON.parse(JSON.stringify(target.state.backgroundConfig)),
-        splitTextConfig: JSON.parse(JSON.stringify(target.state.splitTextConfig)),
+        animationConfig: deepClone(target.state.animationConfig),
+        backgroundConfig: deepClone(target.state.backgroundConfig),
+        splitTextConfig: deepClone(target.state.splitTextConfig),
       })
     }
   },
 
   jumpToHistory: (index) => {
+    get()._flushPendingTextHistory()
     const { history } = get()
     if (index >= 0 && index < history.length) {
       const target = history[index]
       set({
         historyIndex: index,
         text: target.state.text,
-        animationConfig: JSON.parse(JSON.stringify(target.state.animationConfig)),
-        backgroundConfig: JSON.parse(JSON.stringify(target.state.backgroundConfig)),
-        splitTextConfig: JSON.parse(JSON.stringify(target.state.splitTextConfig)),
+        animationConfig: deepClone(target.state.animationConfig),
+        backgroundConfig: deepClone(target.state.backgroundConfig),
+        splitTextConfig: deepClone(target.state.splitTextConfig),
       })
     }
   },
 
   clearHistory: () => {
+    get()._flushPendingTextHistory()
     const state = get()
     const freshEntry: HistoryEntry = {
       id: "reset-" + Date.now(),
@@ -270,8 +313,10 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
     const newAnimConfig: AnimationConfig = {
       ...defaultAnimationConfig,
       ...preset.animationConfig,
-      filter: preset.animationConfig.filter ?? defaultAnimationConfig.filter,
-      fromValues: preset.animationConfig.fromValues ?? defaultAnimationConfig.fromValues,
+      filter: preset.animationConfig.filter ?? deepClone(defaultAnimationConfig.filter),
+      fromValues: preset.animationConfig.fromValues
+        ? deepClone(preset.animationConfig.fromValues)
+        : deepClone(defaultAnimationConfig.fromValues),
       customStyles: {
         ...state.animationConfig.customStyles,
         ...(preset.animationConfig.customStyles ?? {}),
@@ -305,8 +350,8 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
     const state = get()
     const defState = {
       text: "Hello GSAP!",
-      animationConfig: { ...defaultAnimationConfig },
-      backgroundConfig: { ...defaultBackgroundConfig },
+      animationConfig: deepClone(defaultAnimationConfig),
+      backgroundConfig: deepClone(defaultBackgroundConfig),
       splitTextConfig: { ...defaultSplitTextConfig },
     }
     state._recordHistory("Reset all settings", defState)
@@ -328,6 +373,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
       rotationX: 0,
       rotationY: 0,
       skewX: 0,
+      skewY: 0,
       opacity: 1,
       duration: 1,
       delay: 0,
@@ -345,6 +391,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
         rotationX: 0,
         rotationY: 0,
         skewX: 0,
+        skewY: 0,
         opacity: 1,
         filter: { type: "blur" as const, value: 0 },
       },

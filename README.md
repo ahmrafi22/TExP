@@ -57,7 +57,7 @@ TEXP is a modern, interactive text animation generator that empowers designers a
 
 | Technology | Purpose |
 |-----------|---------|
-| **Next.js 15** | Full-stack React framework |
+| **Next.js 16** | Full-stack React framework |
 | **React 19** | UI component library |
 | **TypeScript** | Type-safe development |
 | **Tailwind CSS** | Utility-first styling |
@@ -69,7 +69,7 @@ TEXP is a modern, interactive text animation generator that empowers designers a
 
 ### Prerequisites
 - Node.js 18+
-- pnpm (recommended) or npm
+- npm
 
 ### Installation
 
@@ -81,10 +81,10 @@ git clone https://github.com/yourusername/texp.git
 cd TExP
 
 # Install dependencies
-pnpm install
+npm install
 
 # Start development server
-pnpm dev
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.

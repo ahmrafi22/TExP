@@ -72,14 +72,14 @@ export function SliderField({ label, value, min, max, step, onChange, suffix, cl
           />
           {/* Custom track */}
           <div 
-            className="w-full h-[3px] rounded-full relative pointer-events-none transition-colors" 
+            className="w-full h-[3px] rounded-full pointer-events-none transition-colors" 
             style={{ 
-              background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--border) / 0.8) ${pct}%)` 
+              background: `linear-gradient(to right, var(--primary) ${pct}%, color-mix(in oklab, var(--border) 80%, transparent) ${pct}%)` 
             }}
           >
             {/* Custom thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-background border-[2.5px] border-primary shadow-sm pointer-events-none transition-transform duration-75 group-hover:scale-110 active:scale-95"
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-background border-[2.5px] border-ring pointer-events-none transition-transform duration-75 group-hover:scale-110 active:scale-95"
               style={{ left: `calc(${pct}% - 7px)` }}
             />
           </div>
@@ -105,7 +105,7 @@ export function SliderField({ label, value, min, max, step, onChange, suffix, cl
               setStr(String(value))
             }
           }}
-          className="w-14 h-7 text-center font-mono text-[10px] bg-muted/40 border border-border/70 rounded-md
+          className="w-14 h-7 text-center font-mono text-[10px] bg-muted/40 border border-border rounded-md
             px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/50 hover:bg-muted/60 transition-all
             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
@@ -148,16 +148,16 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide">{label}</Label>
-        <div className="flex bg-muted/50 p-0.5 rounded-md border border-border/40 leading-none">
+        <div className="flex bg-muted/60 p-0.5 rounded-md border border-border leading-none">
           <button
             type="button"
             onClick={() => { onUnitChange("px"); onChange(numVal) }}
-            className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-all ${unit === "px" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground/60 hover:text-foreground"}`}
+            className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-all ${unit === "px" ? "bg-background text-foreground " : "text-muted-foreground/60 hover:text-foreground"}`}
           >px</button>
           <button
             type="button"
             onClick={() => { onUnitChange("%"); onChange(`${numVal}%`) }}
-            className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-all ${unit === "%" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground/60 hover:text-foreground"}`}
+            className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-all ${unit === "%" ? "bg-background text-foreground " : "text-muted-foreground/60 hover:text-foreground"}`}
           >%</button>
         </div>
       </div>
@@ -174,14 +174,14 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
           />
           {/* Custom track */}
           <div 
-            className="w-full h-[3px] rounded-full relative pointer-events-none transition-colors" 
+            className="w-full h-[3px] rounded-full pointer-events-none transition-colors" 
             style={{ 
-              background: `linear-gradient(to right, hsl(var(--primary)) ${pct}%, hsl(var(--border) / 0.8) ${pct}%)` 
+              background: `linear-gradient(to right, var(--primary) ${pct}%, color-mix(in oklab, var(--border) 80%, transparent) ${pct}%)` 
             }}
           >
             {/* Custom thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-background border-[2.5px] border-primary shadow-sm pointer-events-none transition-transform duration-75 group-hover:scale-110 active:scale-95"
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-background border-[2.5px] border-ring pointer-events-none transition-transform duration-75 group-hover:scale-110 active:scale-95"
               style={{ left: `calc(${pct}% - 7px)` }}
             />
           </div>
@@ -207,7 +207,7 @@ function PosSliderField({ label, value, unit, onUnitChange, onChange }: PosSlide
               setStr(String(numVal))
             }
           }}
-          className="w-14 h-7 text-center font-mono text-[10px] bg-muted/40 border border-border/70 rounded-md
+          className="w-14 h-7 text-center font-mono text-[10px] bg-muted/40 border border-border rounded-md
             px-1 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/50 hover:bg-muted/60 transition-all
             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
@@ -235,12 +235,13 @@ interface PropGridProps {
   rotationX: number; onRotX: (n: number) => void
   rotationY: number; onRotY: (n: number) => void
   skewX: number; onSkewX: (n: number) => void
+  skewY: number; onSkewY: (n: number) => void
   opacity: number; onOp: (n: number) => void
   filterType: string; onFilterType: (t: string) => void
   filterVal: number; onFilterVal: (n: number) => void
 }
 
-function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale, onScale, rotation, onRot, rotationX, onRotX, rotationY, onRotY, skewX, onSkewX, opacity, onOp, filterType, onFilterType, filterVal, onFilterVal }: PropGridProps) {
+function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale, onScale, rotation, onRot, rotationX, onRotX, rotationY, onRotY, skewX, onSkewX, skewY, onSkewY, opacity, onOp, filterType, onFilterType, filterVal, onFilterVal }: PropGridProps) {
   const filterOpt = filterOptions.find(f => f.value === filterType) || filterOptions[0]
   return (
     <div className="space-y-4">
@@ -258,10 +259,11 @@ function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale,
         <SliderField label="Rotate Y" value={rotationY} min={-360} max={360} step={1} onChange={onRotY} suffix="°" />
         <SliderField label="Skew X" value={skewX} min={-90} max={90} step={1} onChange={onSkewX} suffix="°" />
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-end">
+      <div className="grid grid-cols-3 gap-x-3 gap-y-3 items-end">
+        <SliderField label="Skew Y" value={skewY} min={-90} max={90} step={1} onChange={onSkewY} suffix="°" />
         <Field label="Filter Type">
           <Select value={filterType} onValueChange={onFilterType}>
-            <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
+            <SelectTrigger className="h-8 text-xs bg-muted/40 border-border hover:bg-muted/60 transition-colors">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -283,13 +285,19 @@ function PropGrid({ xVal, xUnit, onXUnit, onX, yVal, yUnit, onYUnit, onY, scale,
   )
 }
 
-export default function AnimationControls() {
-  const { config, onChange } = usePlaygroundStore(
-    useShallow((s) => ({
-      config: s.animationConfig,
-      onChange: s.setAnimationConfig,
-    })),
-  )
+interface AnimationControlsProps {
+  /** Optional external binding — when omitted, reads/writes the playground store. */
+  config?: AnimationConfig
+  onChange?: (config: AnimationConfig) => void
+}
+
+export default function AnimationControls({ config: propConfig, onChange: propOnChange }: AnimationControlsProps = {}) {
+  // Always subscribe — falls back to store binding when no props are supplied,
+  // so the Text Animation Creator path keeps working unchanged.
+  const storeConfig = usePlaygroundStore((s) => s.animationConfig)
+  const storeOnChange = usePlaygroundStore((s) => s.setAnimationConfig)
+  const config = propConfig ?? storeConfig
+  const onChange = propOnChange ?? storeOnChange
 
   const [xUnit, setXUnit] = useState<"px" | "%">("px")
   const [yUnit, setYUnit] = useState<"px" | "%">("px")
@@ -341,8 +349,8 @@ export default function AnimationControls() {
       {/* Property grid — split for fromTo, single otherwise */}
       {config.tweenType === "fromTo" ? (
         <div className="space-y-4 pt-1">
-          <div className="relative rounded-xl border border-blue-500/15 bg-blue-500/[0.02] p-4 pl-5 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-1 before:rounded-r-md before:bg-blue-500/80">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-3.5">From (Initial Properties)</p>
+          <div className="relative rounded-md border border-border/70 p-4 pl-5 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-0.5 before:rounded-r before:bg-muted-foreground/50">
+            <p className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-3.5">From — Initial Properties</p>
             <PropGrid
               xVal={config.fromValues?.x ?? 0} xUnit={fromXUnit} onXUnit={setFromXUnit} onX={v => setFrom("x", v)}
               yVal={config.fromValues?.y ?? 0} yUnit={fromYUnit} onYUnit={setFromYUnit} onY={v => setFrom("y", v)}
@@ -351,6 +359,8 @@ export default function AnimationControls() {
               rotationX={config.fromValues?.rotationX ?? 0} onRotX={n => setFrom("rotationX", n)}
               rotationY={config.fromValues?.rotationY ?? 0} onRotY={n => setFrom("rotationY", n)}
               skewX={config.fromValues?.skewX ?? 0} onSkewX={n => setFrom("skewX", n)}
+              skewY={config.fromValues?.skewY ?? 0}
+              onSkewY={n => setFrom("skewY", n)}
               opacity={config.fromValues?.opacity ?? 1} onOp={n => setFrom("opacity", n)}
               filterType={config.fromValues?.filter?.type ?? "blur"}
               onFilterType={t => setFrom("filter", { type: t, value: config.fromValues?.filter?.value ?? 0 })}
@@ -358,8 +368,8 @@ export default function AnimationControls() {
               onFilterVal={n => setFrom("filter", { type: config.fromValues?.filter?.type ?? "blur", value: n })}
             />
           </div>
-          <div className="relative rounded-xl border border-emerald-500/15 bg-emerald-500/[0.02] p-4 pl-5 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-1 before:rounded-r-md before:bg-emerald-500/80">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-3.5">To (Target Properties)</p>
+          <div className="relative rounded-md border border-primary/30 bg-primary/[0.04] p-4 pl-5 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-0.5 before:rounded-r before:bg-primary">
+            <p className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-ring mb-3.5">To — Target Properties</p>
             <PropGrid
               xVal={config.x} xUnit={xUnit} onXUnit={setXUnit} onX={v => set("x", v)}
               yVal={config.y} yUnit={yUnit} onYUnit={setYUnit} onY={v => set("y", v)}
@@ -368,6 +378,8 @@ export default function AnimationControls() {
               rotationX={config.rotationX} onRotX={n => set("rotationX", n)}
               rotationY={config.rotationY} onRotY={n => set("rotationY", n)}
               skewX={config.skewX} onSkewX={n => set("skewX", n)}
+            skewY={config.skewY}
+            onSkewY={n => set("skewY", n)}
               opacity={config.opacity} onOp={n => set("opacity", n)}
               filterType={config.filter?.type ?? "blur"}
               onFilterType={t => set("filter", { type: t, value: config.filter?.value ?? 0 })}
@@ -385,6 +397,8 @@ export default function AnimationControls() {
           rotationX={config.rotationX} onRotX={n => set("rotationX", n)}
           rotationY={config.rotationY} onRotY={n => set("rotationY", n)}
           skewX={config.skewX} onSkewX={n => set("skewX", n)}
+            skewY={config.skewY}
+            onSkewY={n => set("skewY", n)}
           opacity={config.opacity} onOp={n => set("opacity", n)}
           filterType={config.filter?.type ?? "blur"}
           onFilterType={t => set("filter", { type: t, value: config.filter?.value ?? 0 })}

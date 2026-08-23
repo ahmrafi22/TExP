@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "frontend-design-deslop": {
+      "source": "samber/cc-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design-deslop/SKILL.md",
+      "computedHash": "98df07ddc1a9bf0a3de6466e392361f3c761ed46fc64b42df1d3b7fc1513f3f6"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",

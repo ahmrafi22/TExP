@@ -117,9 +117,45 @@ const allFontVariables = [
   sacramento, indieFlower, kalam,
 ].map((f) => f.variable).join(" ")
 
+// Resolves relative OG/Twitter URLs against the real deployment host on
+// Vercel; falls back to localhost for local dev.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+
 export const metadata: Metadata = {
-  title: "GSAP Animation Playground",
-  description: "Create stunning text animations with GSAP",
+  metadataBase: new URL(siteUrl),
+  title: "TExP — GSAP Text Animation Generator",
+  description:
+    "Design GSAP text animations visually: split text, stagger, easing, filters and a timeline sequencer — then export production-ready code for vanilla JS, React or Vue.",
+  keywords: ["GSAP", "text animation", "timeline", "motion design", "code generator"],
+  applicationName: "TExP",
+  icons: {
+    icon: "/TEXP.svg",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "TExP",
+    title: "TExP — GSAP Text Animation Generator",
+    description:
+      "Design GSAP text animations visually and export production-ready code for vanilla JS, React or Vue.",
+    images: [
+      {
+        url: "/preview.png",
+        width: 1920,
+        height: 1080,
+        alt: "TExP — visual GSAP text animation studio",
+      },
+    ],
+  },
+  twitter: {
+    // X.com renders this as a large link-preview card
+    card: "summary_large_image",
+    title: "TExP — GSAP Text Animation Generator",
+    description:
+      "Design GSAP text animations visually and export production-ready code for vanilla JS, React or Vue.",
+    images: ["/preview.png"],
+  },
 }
 
 export default function RootLayout({
@@ -129,7 +165,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${allFontVariables}`}>
+      {/* UI voice = Archivo (registered below as --font-archivo); JetBrains Mono
+          is wired to `font-mono` via the @theme bridge in globals.css */}
+      <body className={`${allFontVariables}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>

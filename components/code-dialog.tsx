@@ -17,7 +17,7 @@ export default function CodeDialog() {
       <DialogContent className="max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar p-6">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold flex items-center gap-2">
-            <Code2 className="h-4 w-4 text-violet-500" />
+            <Code2 className="h-4 w-4 text-ring" />
             Export Code
           </DialogTitle>
         </DialogHeader>

@@ -19,6 +19,7 @@ export default function LayersPanel() {
   if (animationConfig.rotationX !== 0) activeTransforms.push({ label: "RotX", value: `${animationConfig.rotationX}°` })
   if (animationConfig.rotationY !== 0) activeTransforms.push({ label: "RotY", value: `${animationConfig.rotationY}°` })
   if (animationConfig.skewX !== 0) activeTransforms.push({ label: "SkewX", value: `${animationConfig.skewX}°` })
+  if (animationConfig.skewY !== 0) activeTransforms.push({ label: "SkewY", value: `${animationConfig.skewY}°` })
   if (animationConfig.opacity !== 1) activeTransforms.push({ label: "Opacity", value: animationConfig.opacity })
   if (animationConfig.filter.value > 0) {
     activeTransforms.push({
@@ -32,8 +33,8 @@ export default function LayersPanel() {
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-            <Layers className="h-4 w-4 text-blue-500" />
+          <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+            <Layers className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider">Layers & Elements</h3>
@@ -41,9 +42,9 @@ export default function LayersPanel() {
           </div>
         </div>
         {isAnimating && (
-          <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-500 border-emerald-500/30 gap-1 animate-pulse">
+          <Badge variant="outline" className="text-[10px] bg-primary/10 text-ring border-primary/30 gap-1 animate-pulse font-mono">
             <Activity className="h-3 w-3" />
-            Playing
+            LIVE
           </Badge>
         )}
       </div>
@@ -53,7 +54,7 @@ export default function LayersPanel() {
         <div className="p-3 rounded-lg border border-border/80 bg-background/50 space-y-2.5">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="flex items-center gap-2 font-semibold text-foreground">
-              <Box className="h-3.5 w-3.5 text-violet-500" />
+              <Box className="h-3.5 w-3.5 text-muted-foreground" />
               Canvas Artboard
             </span>
             <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">1920 × 1080</span>
@@ -63,7 +64,7 @@ export default function LayersPanel() {
             {/* Background Layer */}
             <div className="p-2 rounded-md border border-border/60 bg-background/60 flex items-center justify-between">
               <span className="flex items-center gap-2 text-muted-foreground">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/60" />
                 <span className="font-sans font-medium text-foreground">Background</span>
               </span>
               <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
@@ -75,7 +76,7 @@ export default function LayersPanel() {
             <div className="p-3 rounded-md border border-border bg-background space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 font-medium text-foreground">
-                  <Type className="h-3.5 w-3.5 text-blue-500" />
+                  <Type className="h-3.5 w-3.5 text-muted-foreground" />
                   &lt;div class="text-target"&gt;
                 </span>
                 <Eye className="h-3.5 w-3.5 text-muted-foreground" />
@@ -95,7 +96,7 @@ export default function LayersPanel() {
 
               {/* Attached Animation Properties Card */}
               <div className="mt-2 p-2.5 rounded bg-muted/40 border border-border/70 space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-violet-500">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-ring">
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3" />
                     GSAP Properties
@@ -105,26 +106,26 @@ export default function LayersPanel() {
                   </Badge>
                 </div>
 
-                {/* Timing & Ease */}
-                <div className="grid grid-cols-2 gap-1.5 text-[10px] text-muted-foreground font-mono">
-                  <div className="bg-background/80 p-1.5 rounded border border-border/40 flex justify-between">
+                {/* Timing & Ease — stacked full-width rows so nothing clips */}
+                <div className="space-y-1 text-[10px] text-muted-foreground font-mono">
+                  <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
                     <span>Duration:</span>
-                    <span className="text-foreground font-medium">{animationConfig.duration}s</span>
+                    <span className="text-foreground font-medium tnum">{animationConfig.duration}s</span>
                   </div>
-                  <div className="bg-background/80 p-1.5 rounded border border-border/40 flex justify-between">
+                  <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
                     <span>Ease:</span>
-                    <span className="text-foreground font-medium truncate max-w-[65px]">{animationConfig.ease}</span>
+                    <span className="text-foreground font-medium truncate">{animationConfig.ease}</span>
                   </div>
                   {animationConfig.delay > 0 && (
-                    <div className="bg-background/80 p-1.5 rounded border border-border/40 flex justify-between">
+                    <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
                       <span>Delay:</span>
-                      <span className="text-foreground font-medium">{animationConfig.delay}s</span>
+                      <span className="text-foreground font-medium tnum">{animationConfig.delay}s</span>
                     </div>
                   )}
                   {animationConfig.repeat !== 0 && (
-                    <div className="bg-background/80 p-1.5 rounded border border-border/40 flex justify-between">
+                    <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
                       <span>Repeat:</span>
-                      <span className="text-foreground font-medium">{animationConfig.repeat}{animationConfig.yoyo ? " (yoyo)" : ""}</span>
+                      <span className="text-foreground font-medium tnum">{animationConfig.repeat}{animationConfig.yoyo ? " (yoyo)" : ""}</span>
                     </div>
                   )}
                 </div>
@@ -150,7 +151,7 @@ export default function LayersPanel() {
               {/* Split Text Sublayers / Targets */}
               <div className="mt-2 pt-2 border-t border-border/60 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-semibold">
-                  <span className="flex items-center gap-1.5 text-blue-500">
+                  <span className="flex items-center gap-1.5 text-ring">
                     <Zap className="h-3 w-3" />
                     Target Elements
                   </span>
@@ -161,18 +162,27 @@ export default function LayersPanel() {
 
                 {splitTextConfig.enabled ? (
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded text-blue-600 dark:text-blue-400">
+                    <div className="flex items-center justify-between text-[10px] bg-primary/10 border border-primary/25 px-2 py-1 rounded text-ring">
                       <span>Stagger: {splitTextConfig.stagger}s</span>
                       <span>From: {splitTextConfig.staggerFrom}</span>
                     </div>
-                    <div className="pl-2 space-y-1 text-[10px] text-muted-foreground max-h-36 overflow-y-auto custom-scrollbar">
-                      {text.split(splitTextConfig.type === "chars" ? "" : " ").map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between py-1 px-1.5 rounded bg-muted/30 hover:bg-muted/60 border border-border/40">
-                          <span className="text-blue-500">.{splitTextConfig.type === "chars" ? "char" : "word"}[{idx}]</span>
-                          <span className="font-sans font-medium text-foreground">"{item === " " ? "␣" : item}"</span>
-                        </div>
-                      ))}
-                    </div>
+                    {splitTextConfig.type === "lines" ? (
+                      <div className="text-[10px] text-muted-foreground bg-muted/20 p-1.5 rounded border border-border/40 italic">
+                        .line targets are computed from rendered layout
+                      </div>
+                    ) : (
+                      <div className="pl-2 space-y-1 text-[10px] text-muted-foreground max-h-36 overflow-y-auto custom-scrollbar">
+                        {(splitTextConfig.type === "chars"
+                          ? Array.from(text)
+                          : text.split(/\s+/).filter(Boolean)
+                        ).map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-1 px-1.5 rounded bg-muted/30 hover:bg-muted/60 border border-border/40">
+                            <span className="text-ring">.{splitTextConfig.type === "chars" ? "char" : "word"}[{idx}]</span>
+                            <span className="font-sans font-medium text-foreground">"{item === " " ? "\u2423" : item}"</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-[10px] text-muted-foreground bg-muted/20 p-1.5 rounded border border-border/40 italic">

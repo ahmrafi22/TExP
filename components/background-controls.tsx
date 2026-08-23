@@ -47,6 +47,8 @@ export default function BackgroundControls() {
       }
       reader.readAsDataURL(file)
     }
+    // Allow re-selecting the same file later
+    event.target.value = ""
   }
 
   const clearImage = () => onChange({ ...config, image: null })
@@ -75,7 +77,7 @@ export default function BackgroundControls() {
               onClick={() => handleColorChange("auto")}
               className={`flex-1 h-7 text-[11px] font-semibold rounded-md transition-all ${
                 config.color === "auto"
-                  ? "bg-background shadow-xs text-foreground"
+                  ? "bg-background text-foreground"
                   : "text-muted-foreground/60 hover:text-foreground"
               }`}
             >
@@ -86,7 +88,7 @@ export default function BackgroundControls() {
               onClick={() => handleColorChange("#ffffff")}
               className={`flex-1 h-7 text-[11px] font-semibold rounded-md transition-all ${
                 config.color !== "auto"
-                  ? "bg-background shadow-xs text-foreground"
+                  ? "bg-background text-foreground"
                   : "text-muted-foreground/60 hover:text-foreground"
               }`}
             >
@@ -237,7 +239,7 @@ export default function BackgroundControls() {
       {config.type === "image" && (
         <div className="space-y-3 pt-1.5 animate-fade-in duration-200">
           {config.image ? (
-            <div className="relative rounded-xl overflow-hidden border border-border/60 group shadow-md">
+            <div className="relative rounded-md overflow-hidden border border-border group">
               <img
                 src={config.image}
                 alt="Background preview"
@@ -246,14 +248,14 @@ export default function BackgroundControls() {
               <button
                 type="button"
                 onClick={clearImage}
-                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/90 backdrop-blur-md border border-border/60 flex items-center justify-center text-foreground hover:bg-destructive hover:text-white hover:border-destructive transition-all shadow-md active:scale-95"
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/90 backdrop-blur-md border border-border flex items-center justify-center text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors"
                 aria-label="Remove image"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
-            <div className="h-32 rounded-xl border-2 border-dashed border-border/60 hover:border-border/100 bg-muted/10 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground/60">
+            <div className="h-32 rounded-md border border-dashed border-border hover:border-muted-foreground/40 bg-muted/10 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground/60">
               <ImageIcon className="h-6 w-6 text-muted-foreground/45" />
               <p className="text-[11px] font-medium">Select background image</p>
             </div>
@@ -262,7 +264,7 @@ export default function BackgroundControls() {
           <Button
             variant="outline"
             onClick={() => document.getElementById("image-upload")?.click()}
-            className="w-full h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors shadow-xs"
+            className="w-full h-8 text-xs bg-muted/40 border-border hover:bg-muted/60 transition-colors"
           >
             <Upload className="w-3.5 h-3.5 mr-1.5" />
             {config.image ? "Replace Image" : "Choose Image File"}

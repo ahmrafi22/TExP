@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { usePlaygroundStore } from "@/store/use-playground-store"
 import { History, Undo2, Redo2, RotateCcw, Clock, CheckCircle2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,13 @@ export default function HistoryPanel() {
   const jumpToHistory = usePlaygroundStore((s) => s.jumpToHistory)
   const clearHistory = usePlaygroundStore((s) => s.clearHistory)
 
+  // Timestamps are formatted with locale/timezone — render them only after
+  // mount to avoid SSR/client hydration mismatches.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const canUndo = historyIndex > 0
   const canRedo = historyIndex < history.length - 1
 
@@ -22,8 +29,8 @@ export default function HistoryPanel() {
       {/* Header controls */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-            <History className="h-4 w-4 text-violet-500" />
+          <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+            <History className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider">Action History</h3>
@@ -80,20 +87,20 @@ export default function HistoryPanel() {
               <div
                 key={entry.id}
                 onClick={() => jumpToHistory(index)}
-                className={`group relative flex items-start gap-3 p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`group relative flex items-start gap-3 p-2.5 rounded-lg border text-left transition-colors cursor-pointer ${
                   isCurrent
-                    ? "bg-violet-500/10 border-violet-500/40 text-foreground shadow-sm"
+                    ? "bg-accent border-ring/50 text-foreground"
                     : "bg-background/40 border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {/* Active indicator bar */}
                 {isCurrent && (
-                  <div className="absolute left-0 inset-y-1 w-1 bg-violet-500 rounded-r-full" />
+                  <div className="absolute left-0 inset-y-1 w-1 bg-primary rounded-r-full" />
                 )}
 
                 <div className="mt-0.5 shrink-0">
                   {isCurrent ? (
-                    <CheckCircle2 className="h-4 w-4 text-violet-500" />
+                    <CheckCircle2 className="h-4 w-4 text-ring" />
                   ) : (
                     <Clock className="h-3.5 w-3.5 opacity-60 group-hover:opacity-100" />
                   )}
@@ -101,11 +108,11 @@ export default function HistoryPanel() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-xs font-medium truncate ${isCurrent ? "text-violet-600 dark:text-violet-400 font-semibold" : ""}`}>
+                    <span className={`text-xs font-medium truncate ${isCurrent ? "font-semibold" : ""}`}>
                       {entry.label}
                     </span>
                     <span className="text-[10px] opacity-50 shrink-0 font-mono">
-                      {timeStr}
+                      {mounted ? timeStr : "--:--:--"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
@@ -122,7 +129,7 @@ export default function HistoryPanel() {
 
                 {!isCurrent && (
                   <div className="opacity-0 group-hover:opacity-100 self-center transition-opacity">
-                    <ArrowRight className="h-3.5 w-3.5 text-violet-500" />
+                    <ArrowRight className="h-3.5 w-3.5 text-ring" />
                   </div>
                 )}
               </div>

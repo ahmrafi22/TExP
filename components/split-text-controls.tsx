@@ -4,16 +4,20 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { usePlaygroundStore } from "@/store/use-playground-store"
-import { useShallow } from "zustand/react/shallow"
 import { SliderField } from "./animation-controls"
+import type { SplitTextConfig } from "@/types/animation"
 
-export default function SplitTextControls() {
-  const { config, setSplitTextConfig } = usePlaygroundStore(
-    useShallow((s) => ({
-      config: s.splitTextConfig,
-      setSplitTextConfig: s.setSplitTextConfig,
-    })),
-  )
+interface SplitTextControlsProps {
+  /** Optional external binding — when omitted, reads/writes the playground store. */
+  config?: SplitTextConfig
+  setSplitTextConfig?: (config: SplitTextConfig) => void
+}
+
+export default function SplitTextControls({ config: propConfig, setSplitTextConfig: propSetter }: SplitTextControlsProps = {}) {
+  const storeConfig = usePlaygroundStore((s) => s.splitTextConfig)
+  const storeSetter = usePlaygroundStore((s) => s.setSplitTextConfig)
+  const config = propConfig ?? storeConfig
+  const setSplitTextConfig = propSetter ?? storeSetter
 
   const handleChange = (key: keyof typeof config, value: any) => {
     setSplitTextConfig({ ...config, [key]: value })

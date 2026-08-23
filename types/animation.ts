@@ -6,6 +6,7 @@ export interface AnimationConfig {
   rotationX: number
   rotationY: number
   skewX: number
+  skewY: number
   opacity: number
   duration: number
   delay: number
@@ -27,6 +28,7 @@ export interface AnimationConfig {
     rotationX?: number
     rotationY?: number
     skewX?: number
+    skewY?: number
     opacity?: number
     filter?: {
       type: "blur" | "brightness" | "contrast" | "saturate"

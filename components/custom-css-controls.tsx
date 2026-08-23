@@ -6,16 +6,20 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Switch } from "@/components/ui/switch"
 import { googleFonts, getFontCategories } from "@/lib/fonts"
 import { usePlaygroundStore } from "@/store/use-playground-store"
-import { useShallow } from "zustand/react/shallow"
 import { Palette, Pipette } from "lucide-react"
+import type { AnimationConfig } from "@/types/animation"
 
-export default function CustomCssControls() {
-  const { config, onChange } = usePlaygroundStore(
-    useShallow((s) => ({
-      config: s.animationConfig,
-      onChange: s.setAnimationConfig,
-    })),
-  )
+interface CustomCssControlsProps {
+  /** Optional external binding — when omitted, reads/writes the playground store. */
+  config?: AnimationConfig
+  onChange?: (config: AnimationConfig) => void
+}
+
+export default function CustomCssControls({ config: propConfig, onChange: propOnChange }: CustomCssControlsProps = {}) {
+  const storeConfig = usePlaygroundStore((s) => s.animationConfig)
+  const storeOnChange = usePlaygroundStore((s) => s.setAnimationConfig)
+  const config = propConfig ?? storeConfig
+  const onChange = propOnChange ?? storeOnChange
 
   const handleStyleChange = (key: string, value: any) => {
     onChange({

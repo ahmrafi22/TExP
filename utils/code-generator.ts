@@ -52,7 +52,11 @@ function generateAnimationCode(params: CodeGenerationParams) {
   const animationLogic = generateAnimationLogic(params)
 
   if (framework === "vanilla") {
-    code += animationLogic
+    // The shared logic begins with `if (!textElement) return;`, which is only
+    // legal inside a function — wrap it so the exported snippet is runnable.
+    code += `function playTextAnimation() {\n`
+    code += animationLogic.split("\n").map((l) => (l ? `  ${l}` : l)).join("\n")
+    code += `\n}\n\nplayTextAnimation();\n`
   } else if (framework === "react") {
     code += `useGSAP(() => {\n`
     code += `  ${animationLogic.split("\n").join("\n  ")}\n`
@@ -64,6 +68,18 @@ function generateAnimationCode(params: CodeGenerationParams) {
   }
 
   return code
+}
+
+/**
+ * Strips the import/setup preamble from generated animation code, returning
+ * only the executable hook body (useGSAP / onMounted block). The preamble
+ * length varies with options (SplitText imports etc.), so a fixed slice would
+ * leak duplicate `textRef` declarations into the output.
+ */
+function extractHookBody(animationCode: string): string {
+  const lines = animationCode.split("\n")
+  const start = lines.findIndex((l) => l.startsWith("useGSAP(") || l.startsWith("onMounted("))
+  return (start >= 0 ? lines.slice(start) : lines).join("\n")
 }
 
 function generateAnimationLogic(params: CodeGenerationParams) {
@@ -112,6 +128,7 @@ function generateAnimationLogic(params: CodeGenerationParams) {
   if (animationConfig.rotationX !== 0) animProps.push(`rotationX: ${animationConfig.rotationX}`)
   if (animationConfig.rotationY !== 0) animProps.push(`rotationY: ${animationConfig.rotationY}`)
   if (animationConfig.skewX !== 0) animProps.push(`skewX: ${animationConfig.skewX}`)
+  if (animationConfig.skewY !== 0) animProps.push(`skewY: ${animationConfig.skewY}`)
   if (animationConfig.opacity !== 1) animProps.push(`opacity: ${animationConfig.opacity}`)
 
   // Add filter if it has a value
@@ -184,6 +201,7 @@ function generateAnimationLogic(params: CodeGenerationParams) {
     if ((fromValues?.rotationX ?? 0) !== 0) fromProps.push(`rotationX: ${fromValues?.rotationX ?? 0}`)
     if ((fromValues?.rotationY ?? 0) !== 0) fromProps.push(`rotationY: ${fromValues?.rotationY ?? 0}`)
     if ((fromValues?.skewX ?? 0) !== 0) fromProps.push(`skewX: ${fromValues?.skewX ?? 0}`)
+    if ((fromValues?.skewY ?? 0) !== 0) fromProps.push(`skewY: ${fromValues?.skewY ?? 0}`)
     if ((fromValues?.opacity ?? 1) !== 1) fromProps.push(`opacity: ${fromValues?.opacity ?? 1}`)
 
     // Add from filter if it has a value
@@ -220,6 +238,7 @@ function generateAnimationLogic(params: CodeGenerationParams) {
     if (animationConfig.rotationX !== 0) toProps.push(`rotationX: ${animationConfig.rotationX}`)
     if (animationConfig.rotationY !== 0) toProps.push(`rotationY: ${animationConfig.rotationY}`)
     if (animationConfig.skewX !== 0) toProps.push(`skewX: ${animationConfig.skewX}`)
+    if (animationConfig.skewY !== 0) toProps.push(`skewY: ${animationConfig.skewY}`)
     if (animationConfig.opacity !== 1) toProps.push(`opacity: ${animationConfig.opacity}`)
 
     // Add to filter if it has a value
@@ -496,12 +515,11 @@ ${Object.entries(customStyles).map(([key, value]) => `        ${key}: '${value}'
     return `import React, { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
-${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';" : ""}
-
+${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';\n" : ""}
 ${isTS ? "const AnimatedText: React.FC = () => {" : "const AnimatedText = () => {"}
   const textRef = useRef${isTS ? "<HTMLDivElement>(null)" : "(null)"};
 
-  ${animationCode.split("\n").slice(6).join("\n  ")}
+  ${extractHookBody(animationCode).split("\n").join("\n  ")}
 
   return (${containerJSX}
   );
@@ -529,12 +547,15 @@ ${Object.entries(customStyles).map(([key, value]) => `      ${key}: '${value}'`)
       position: 'relative'
     }` : null;
 
+    // Vue binds style objects through HTML attributes — keep them on one line
+    // so the generated template can't be broken by embedded newlines.
+    const inline = (obj: string) => obj.replace(/\s*\n\s*/g, " ").trim()
     const template = containerStyle ? `
-  <div class="text-container" :style="${containerStyle}">
+  <div class="text-container" :style="${inline(containerStyle)}">
     <div 
       ref="textRef"
       class="animated-text"
-      :style="${styleObject}"
+      :style="${inline(styleObject)}"
     >
       ${params.text}
     </div>
@@ -542,7 +563,7 @@ ${Object.entries(customStyles).map(([key, value]) => `      ${key}: '${value}'`)
   <div 
     ref="textRef"
     class="animated-text"
-    :style="${styleObject}"
+    :style="${inline(styleObject)}"
   >
     ${params.text}
   </div>`;
@@ -553,14 +574,13 @@ ${Object.entries(customStyles).map(([key, value]) => `      ${key}: '${value}'`)
 <script${isTS ? ' lang="ts"' : ""}>
 import { defineComponent, onMounted, ref } from 'vue';
 import { gsap } from 'gsap';
-${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';" : ""}
-
+${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';\n" : ""}
 export default defineComponent({
   name: 'AnimatedText',
   setup() {
     const textRef = ref${isTS ? "<HTMLElement | null>" : ""}(null);
 
-    ${animationCode.split("\n").slice(6).join("\n    ")}
+    ${extractHookBody(animationCode).split("\n").join("\n    ")}
 
     return {
       textRef

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useCallback, useEffect } from "react"
-import { Play, RotateCcw, Trash2, Settings2, Sparkles, Paintbrush, Wand2, History, Layers, Undo2, Redo2 } from "lucide-react"
+import { Play, RotateCcw, Trash2, Settings2, Sparkles, Paintbrush, Wand2, History, Layers, Undo2, Redo2, HelpCircle } from "lucide-react"
 import TexpLogo from "@/components/texp-logo"
 import PreviewCanvas, { PreviewCanvasRef } from "@/components/preview-canvas"
 import AnimationControls from "@/components/animation-controls"
@@ -17,6 +17,7 @@ import HistoryPanel from "@/components/history-panel"
 import LayersPanel from "@/components/layers-panel"
 import ModeSwitcher from "@/components/mode-switcher"
 import TimelineCreator from "@/components/timeline-creator"
+import OnboardingTour, { startTour } from "@/components/onboarding-tour"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
@@ -129,7 +130,7 @@ export default function GSAPPlayground() {
   // Left Sidebar Content (Figma Left Panel)
   const leftSidebarContent = (
     <Tabs defaultValue="layers" onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-      <div className="px-2 pt-2 pb-0">
+      <div id="tour-left-tabs" className="px-2 pt-2 pb-0">
         <TabsList className="w-full grid grid-cols-3 gap-1 bg-muted/25 border border-ring/45 rounded-lg p-1 h-auto">
           <TabsTrigger
             value="layers"
@@ -259,21 +260,22 @@ export default function GSAPPlayground() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background select-none">
+      <OnboardingTour />
       {/* Figma Top Header Bar */}
       <header className="relative h-12 min-h-[3rem] flex items-center justify-between px-3 border-b border-border bg-card z-50">
-        <div className="flex items-center gap-3">
+        <div id="tour-header" className="flex items-center gap-3">
           <TexpLogo className="h-6 w-auto text-foreground" />
           <div className="h-4 w-px bg-border" />
           <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.3.1</span>
         </div>
 
         {/* Centered workspace mode switcher — true navbar center (desktop) */}
-        <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+        <div id="tour-mode" className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
           <ModeSwitcher />
         </div>
 
         {/* Right Header Actions */}
-        <div className="flex items-center gap-2">
+        <div id="tour-header-actions" className="flex items-center gap-2">
           {/* Undo / Redo — directly left of the code buttons (text mode only) */}
           {activeMode === "text" && (
             <div className="hidden md:flex items-center gap-1">
@@ -301,6 +303,18 @@ export default function GSAPPlayground() {
           )}
           {activeMode === "text" ? <CodeDialog /> : <TimelineExportDialog />}
           <ThemeToggle />
+
+          {/* Replay the onboarding tour */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            onClick={() => startTour()}
+            title="Take the tour"
+            aria-label="Replay onboarding tour"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
 
           {/* Mobile Settings Drawer */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -338,16 +352,16 @@ export default function GSAPPlayground() {
         </div>
 
         {/* Center Canvas — full-bleed, borderless artboard */}
-        <div className="flex-1 min-h-0 relative">
+        <div id="tour-canvas" className="flex-1 min-h-0 relative">
           {/* Top text input bar */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[85%] sm:w-[420px]">
+          <div id="tour-text-input" className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[85%] sm:w-[420px]">
             <TextInput />
           </div>
 
           <PreviewCanvas ref={previewCanvasRef} />
 
           {/* Floating transport bar — the one pill-shaped element in the system */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-card/95 backdrop-blur-md border border-border px-4 py-2 rounded-full shadow-float">
+          <div id="tour-transport" className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-card/95 backdrop-blur-md border border-border px-4 py-2 rounded-full shadow-float">
             <Button
               onClick={playAnimation}
               disabled={isAnimating}

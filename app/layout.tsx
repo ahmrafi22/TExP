@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import {
   Inter, Roboto, Open_Sans, Lato, Montserrat, Poppins, Nunito, Raleway,
@@ -170,6 +171,7 @@ export default function RootLayout({
       <body className={`${allFontVariables}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

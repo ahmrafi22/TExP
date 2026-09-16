@@ -1,4 +1,5 @@
 import type { CodeGenerationParams } from "@/types/animation"
+import { customEaseExpression } from "@/lib/custom-ease"
 
 export function generateCode(params: CodeGenerationParams) {
   const { text, animationConfig, backgroundConfig, splitTextConfig, framework, language } = params
@@ -18,12 +19,19 @@ function generateAnimationCode(params: CodeGenerationParams) {
 
   let code = ""
 
+  // The custom (Bézier/spring) ease exports as a GSAP CustomEase path.
+  const usesCustomEase = animationConfig.ease === "custom"
+
   // Add imports and setup comments
   if (framework === "vanilla") {
     code += `// Import GSAP\n`
     code += `import { gsap } from "gsap";\n`
     if (splitTextConfig.enabled) {
       code += `import { SplitText } from "gsap/SplitText";\n`
+    }
+    if (usesCustomEase) {
+      code += `import { CustomEase } from "gsap/CustomEase";\n`
+      code += `gsap.registerPlugin(CustomEase);\n`
     }
     code += `\n// Target element reference\n`
     code += `const textElement = document.querySelector('.animated-text');\n\n`
@@ -34,6 +42,10 @@ function generateAnimationCode(params: CodeGenerationParams) {
     if (splitTextConfig.enabled) {
       code += `import { SplitText } from "gsap/SplitText";\n`
     }
+    if (usesCustomEase) {
+      code += `import { CustomEase } from "gsap/CustomEase";\n`
+      code += `gsap.registerPlugin(CustomEase);\n`
+    }
     code += `import { useRef } from "react";\n\n`
     code += `// Component ref\n`
     code += `const textRef = useRef${isTS ? "<HTMLDivElement>(null)" : "(null)"};\n\n`
@@ -42,6 +54,10 @@ function generateAnimationCode(params: CodeGenerationParams) {
     code += `import { gsap } from "gsap";\n`
     if (splitTextConfig.enabled) {
       code += `import { SplitText } from "gsap/SplitText";\n`
+    }
+    if (usesCustomEase) {
+      code += `import { CustomEase } from "gsap/CustomEase";\n`
+      code += `gsap.registerPlugin(CustomEase);\n`
     }
     code += `import { onMounted, ref } from "vue";\n\n`
     code += `// Template ref\n`
@@ -154,7 +170,24 @@ function generateAnimationLogic(params: CodeGenerationParams) {
 
   animProps.push(`duration: ${animationConfig.duration}`)
   if (animationConfig.delay > 0) animProps.push(`delay: ${animationConfig.delay}`)
-  if (animationConfig.ease !== "power1.out") animProps.push(`ease: "${animationConfig.ease}"`)
+  if (animationConfig.ease === "custom") {
+    animProps.push(`ease: ${customEaseExpression(animationConfig.customEase, animationConfig.duration)}`)
+  } else if (animationConfig.ease !== "power1.out") {
+    animProps.push(`ease: "${animationConfig.ease}"`)
+  }
+
+  // Mirror the preview engine: 2D transforms unless a 3D rotation is used, so
+  // scaled text stays crisp instead of being stretched as a GPU bitmap.
+  {
+    const fv = animationConfig.fromValues
+    const needs3D =
+      animationConfig.rotationX !== 0 || animationConfig.rotationY !== 0 ||
+      (fv?.rotationX ?? 0) !== 0 || (fv?.rotationY ?? 0) !== 0
+    const hasTransform =
+      animationConfig.x !== 0 || animationConfig.y !== 0 || animationConfig.scale !== 1 ||
+      animationConfig.rotation !== 0 || animationConfig.skewX !== 0 || animationConfig.skewY !== 0
+    if (!needs3D && hasTransform) animProps.push(`force3D: false`)
+  }
 
   // Add repeat and yoyo
   if (animationConfig.repeat > 0) {
@@ -267,6 +300,7 @@ function generateAnimationLogic(params: CodeGenerationParams) {
         prop.includes("duration:") ||
         prop.includes("delay:") ||
         prop.includes("ease:") ||
+        prop.includes("force3D:") ||
         prop.includes("repeat:") ||
         prop.includes("yoyo:") ||
         prop.includes("stagger:"),
@@ -515,7 +549,7 @@ ${Object.entries(customStyles).map(([key, value]) => `        ${key}: '${value}'
     return `import React, { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
-${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';\n" : ""}
+${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';\n" : ""}${animationConfig.ease === "custom" ? "import { CustomEase } from 'gsap/CustomEase';\ngsap.registerPlugin(CustomEase);\n" : ""}
 ${isTS ? "const AnimatedText: React.FC = () => {" : "const AnimatedText = () => {"}
   const textRef = useRef${isTS ? "<HTMLDivElement>(null)" : "(null)"};
 
@@ -574,7 +608,7 @@ ${Object.entries(customStyles).map(([key, value]) => `      ${key}: '${value}'`)
 <script${isTS ? ' lang="ts"' : ""}>
 import { defineComponent, onMounted, ref } from 'vue';
 import { gsap } from 'gsap';
-${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';\n" : ""}
+${params.splitTextConfig.enabled ? "import { SplitText } from 'gsap/SplitText';\n" : ""}${animationConfig.ease === "custom" ? "import { CustomEase } from 'gsap/CustomEase';\ngsap.registerPlugin(CustomEase);\n" : ""}
 export default defineComponent({
   name: 'AnimatedText',
   setup() {

@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import { useTimelineUiStore } from "@/store/use-timeline-store"
 import TimelinePreview from "@/components/timeline-preview"
-import TimelineRuler from "@/components/timeline-ruler"
 import TimelineTrackList from "@/components/timeline-track-list"
 import TimelineInspector from "@/components/timeline-inspector"
 import TimelineSettingsPanel from "@/components/timeline-settings-panel"
@@ -41,26 +40,24 @@ export default function TimelineCreator() {
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* Left panel: add + tracks + settings */}
       <div className="hidden md:flex w-[280px] min-w-[280px] border-r border-border bg-card flex-col">
-        <div className="p-3 border-b border-border flex items-center gap-2">
+        <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
           <TimelineAddDialog />
+          <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-muted-foreground/50">Sequencer</span>
         </div>
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0">
             <TimelineTrackList />
           </div>
-          <div className="h-[240px] min-h-[180px] border-t border-border">
+          <div className="h-[260px] min-h-[200px] border-t border-border">
             <TimelineSettingsPanel />
           </div>
         </div>
       </div>
 
-      {/* Center: preview + ruler */}
+      {/* Center: preview — the DialKit dock below is the timeline */}
       <div className="flex-1 flex flex-col min-w-0 bg-background">
-        <div className="flex-1 min-h-0 p-4 pb-2">
+        <div className="flex-1 min-h-0 p-4">
           <TimelinePreview />
-        </div>
-        <div className="h-[240px] min-h-[200px] border-t border-border bg-card">
-          <TimelineRuler />
         </div>
       </div>
 

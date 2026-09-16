@@ -359,3 +359,106 @@ input[type="number"] {
 .driver-popover.driver-tour .driver-popover-arrow-side-bottom.driver-popover-arrow {
   border-color: var(--popover);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DialKit controls on Obsidian Instrument tokens.
+
+   `.dialkit-root[data-theme]` (0,2,0) ties the package's own theme rules
+   and wins on import order (layout.tsx imports the package sheet before
+   globals.css).
+   Surfaces are derived from --foreground via color-mix so light/dark flip
+   automatically; the one acid-lime accent owns every live state DialKit
+   expresses through --dial-border-hover (active slider fill, pad drag ring,
+   toggle-on track) plus --dial-focus-ring on focus.
+   ───────────────────────────────────────────────────────────────────────── */
+.dialkit-root[data-theme] {
+  font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --dial-radius: var(--radius);
+  --dial-row-height: 30px;
+  --dial-row-gap: 6px;
+
+  --dial-surface: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --dial-surface-hover: color-mix(in oklab, var(--foreground) 9%, transparent);
+  --dial-surface-active: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --dial-surface-subtle: color-mix(in oklab, var(--foreground) 7%, transparent);
+
+  --dial-text-root: var(--foreground);
+  --dial-text-section: var(--muted-foreground);
+  --dial-text-label: var(--muted-foreground);
+  --dial-text-focus: var(--foreground);
+  --dial-text-primary: var(--foreground);
+  --dial-text-secondary: var(--muted-foreground);
+  --dial-text-tertiary: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+
+  --dial-border: var(--border);
+  --dial-border-hover: var(--primary);
+  --dial-focus-ring: var(--ring);
+
+  --dial-glass-bg: var(--card);
+  --dial-dropdown-bg: var(--popover);
+  --dial-backdrop-blur: 0px;
+  --dial-shadow: none;
+  --dial-shadow-collapsed: none;
+  --dial-shadow-dropdown: var(--shadow-float);
+}
+
+/* Instrument readouts in mono; labels one step down from the package default */
+.dialkit-root[data-theme] .dialkit-slider-label,
+.dialkit-root[data-theme] .dialkit-select-label,
+.dialkit-root[data-theme] .dialkit-color-label,
+.dialkit-root[data-theme] .dialkit-text-label,
+.dialkit-root[data-theme] .dialkit-toggle-label,
+.dialkit-root[data-theme] .dialkit-pad-label {
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.dialkit-root[data-theme] .dialkit-slider-value,
+.dialkit-root[data-theme] .dialkit-slider-input,
+.dialkit-root[data-theme] .dialkit-color-value,
+.dialkit-root[data-theme] .dialkit-color-css-input,
+.dialkit-root[data-theme] .dialkit-pad-value,
+.dialkit-root[data-theme] .dialkit-pad-field input {
+  font-family: var(--font-jetbrainsMono), ui-monospace, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toggle-on: ink thumb on the lime track in both themes */
+.dialkit-root[data-theme] .dialkit-toggle[data-checked="true"] .dialkit-toggle-thumb {
+  background: var(--primary-foreground);
+  box-shadow: none;
+}
+
+/* Sliders are horizontal drag instruments — resize cursor over the whole
+   track; the click-to-type numeric field keeps a text caret */
+.dialkit-root[data-theme] .dialkit-slider {
+  cursor: ew-resize;
+}
+
+.dialkit-root[data-theme] .dialkit-slider-input {
+  cursor: text;
+}
+
+/* ── DialKit timeline dock — embedded in the transport card ─────────────────
+   DialTimeline portals to <body> and positions fixed; DialTimelineBridge
+   aligns its left/top/width over the in-card slot (right/bottom released) and
+   hides it until the first alignment pass. The dock itself sheds its floating
+   chrome so it reads as part of the card. */
+.dialkit-timeline {
+  right: auto;
+  bottom: auto;
+  visibility: hidden;
+}
+
+.dialkit-timeline .dialkit-timeline-dock {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+  /* Many lanes must not push the artboard out — the dock scrolls internally */
+  max-height: 45vh;
+}

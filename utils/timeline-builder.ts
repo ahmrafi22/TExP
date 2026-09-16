@@ -10,6 +10,22 @@ import type {
   TimelineLayoutEntry,
 } from "@/types/timeline"
 import { buildFromVars, buildTweenVars } from "@/lib/animation-engine"
+import { buildCustomEaseFn } from "@/lib/custom-ease"
+
+// ── Shared track/block identity ───────────────────────────────────────────────
+
+// Muted functional hues (cycle of 5) so blocks stay distinguishable
+// without fighting the acid accent. Aligned with the chart tokens.
+// Shared by the ruler blocks and the left track list so a track's swatch
+// always matches its block on the timeline.
+export const BLOCK_COLORS = [
+  "#96c04f", "#5faec9", "#d2a54e", "#c9719f", "#56b199",
+]
+
+/** Deterministic color for an item, keyed by its position in the ordered list. */
+export function blockColorFor(index: number): string {
+  return BLOCK_COLORS[index % BLOCK_COLORS.length]
+}
 
 // ── Effective duration estimation ─────────────────────────────────────────────
 
@@ -227,7 +243,11 @@ export function buildGsapTimeline(
     // entry.start + delay and drift out of sync with the ruler (and exports).
     vars.duration = item.duration
     delete vars.delay
-    if (item.ease) vars.ease = item.ease
+    // Re-resolve custom eases against the CLIP duration (buildTweenVars used
+    // the config's own duration, which the sequencer overrides above).
+    const effectiveEase = item.ease ?? cfg.ease
+    if (effectiveEase === "custom") vars.ease = buildCustomEaseFn(cfg.customEase, item.duration)
+    else if (item.ease) vars.ease = item.ease
 
     if (cfg.tweenType === "fromTo" && cfg.fromValues) {
       tl.fromTo(target as gsap.TweenTarget, buildFromVars(cfg), vars, entry.start)

@@ -1,3 +1,7 @@
+export type CustomEaseSpec =
+  | { type: "easing"; ease: [number, number, number, number] }
+  | { type: "spring"; visualDuration?: number; bounce?: number; stiffness?: number; damping?: number; mass?: number }
+
 export interface AnimationConfig {
   x: number | string
   y: number | string
@@ -11,6 +15,8 @@ export interface AnimationConfig {
   duration: number
   delay: number
   ease: string
+  /** Curve data for the "custom" ease mode (DialKit TransitionControl). */
+  customEase?: CustomEaseSpec
   tweenType: "from" | "to" | "fromTo"
   stagger: number
   repeat: number

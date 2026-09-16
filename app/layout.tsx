@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
+import "dialkit/styles.css"
 import "./globals.css"
 import {
   Inter, Roboto, Open_Sans, Lato, Montserrat, Poppins, Nunito, Raleway,

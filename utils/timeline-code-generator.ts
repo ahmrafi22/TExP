@@ -20,6 +20,7 @@ import {
   computeLayout,
   serializePositionLiteral,
 } from "@/utils/timeline-builder"
+import { customEaseExpression } from "@/lib/custom-ease"
 
 export interface TimelineCodeParams {
   project: TimelineProject
@@ -49,6 +50,18 @@ function quote(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : String(value)
 }
 
+/** True when any item resolves to the custom (Bézier/spring) ease. */
+function hasCustomEase(project: TimelineProject): boolean {
+  return project.items.some((i) => (i.ease ?? i.animation.ease) === "custom")
+}
+
+/** Import + register lines for the CustomEase plugin, when needed. */
+function customEaseImportLines(project: TimelineProject): string {
+  return hasCustomEase(project)
+    ? `import { CustomEase } from "gsap/CustomEase";\ngsap.registerPlugin(CustomEase);\n`
+    : ""
+}
+
 function serializeVars(vars: gsap.TweenVars, indent: string): string[] {
   const entries = Object.entries(vars).filter(([key, value]) => {
     if (key === "onComplete" || key === "delay") return false
@@ -59,6 +72,10 @@ function serializeVars(vars: gsap.TweenVars, indent: string): string[] {
   })
   return entries.map(([key, value], i) => {
     const comma = i < entries.length - 1 ? "," : ""
+    // Custom eases are raw JS expressions (CustomEase.create(...)) — never quote them.
+    if (key === "ease" && typeof value === "string" && value.startsWith("CustomEase.create")) {
+      return `${indent}${key}: ${value}${comma}`
+    }
     if (typeof value === "object" && value !== null) {
       const inner = Object.entries(value as Record<string, unknown>)
         .map(([k, v]) => `${k}: ${quote(v)}`)
@@ -132,7 +149,11 @@ function buildTimelineBody(project: TimelineProject, elRef = "elRefs"): string[]
   sorted.forEach((item, idx) => {
     const vars = buildTweenVars(item.animation, item.splitTextConfig)
     vars.duration = item.duration
-    if (item.ease) vars.ease = item.ease
+    // Export never carries a live function — resolve the custom ease to a
+    // CustomEase.create(...) expression string (serializeVars emits it raw).
+    const effectiveEase = item.ease ?? item.animation.ease
+    if (effectiveEase === "custom") vars.ease = customEaseExpression(item.animation.customEase, item.duration)
+    else if (item.ease) vars.ease = item.ease
 
     const pos = serializePositionLiteral(item.position, startMap.get(item.id) ?? 0, idx === 0)
     const target = `${elRef}[${idx}]`
@@ -168,6 +189,7 @@ function generateTimelineAnimation(params: TimelineCodeParams): string {
     return `// Import GSAP + useGSAP hook\nimport { gsap } from "gsap";\nimport { useGSAP } from "@gsap/react";\n` +
       (isTS ? `import { useRef } from "react";\n` : "") +
       (hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : "") +
+      customEaseImportLines(params.project) +
       `\nconst elRefs = useRef${isTS ? "<Array<HTMLDivElement | null>>" : ""}([]);\n\n` +
       `useGSAP(() => {\n` +
       (prep ? `${prep.split("\n").map((l) => `  ${l}`).join("\n")}\n\n` : ``) +
@@ -177,7 +199,7 @@ function generateTimelineAnimation(params: TimelineCodeParams): string {
   if (framework === "vue") {
     const body = buildTimelineBody(params.project, "elRefs.value").join("\n")
     const prep = splitPrepLines(params.project, "elRefs.value", "elRefs.value").join("\n")
-    return `import { gsap } from "gsap";\n${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ``}import { onMounted, ref } from "vue";\n\n` +
+    return `import { gsap } from "gsap";\n${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ``}${customEaseImportLines(params.project)}import { onMounted, ref } from "vue";\n\n` +
       `const elRefs = ref${isTS ? "<Array<HTMLElement | null>>" : ""}([]);\n` +
       `function setElRef(idx${isTS ? ": number" : ""}, el${isTS ? ": Element | null" : ""}) { elRefs.value[idx] = el as HTMLElement; }\n\n` +
       `onMounted(() => {\n` +
@@ -188,7 +210,7 @@ function generateTimelineAnimation(params: TimelineCodeParams): string {
   // vanilla
   const body = buildTimelineBody(params.project, "elRefs").join("\n")
   const prep = splitPrepLines(params.project, "elRefs", "elRefs").join("\n")
-  return `// Import GSAP\nimport { gsap } from "gsap";\n${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ``}\n` +
+  return `// Import GSAP\nimport { gsap } from "gsap";\n${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ``}${customEaseImportLines(params.project)}\n` +
     `// Resolve target elements by order\n` +
     `const elRefs = Array.from(document.querySelectorAll("[data-timeline-item]"));\n\n` +
     (prep ? `${prep}\n\n` : ``) +
@@ -208,7 +230,7 @@ function generateTimelineComplete(params: TimelineCodeParams): string {
     const items = sorted.map((item, i) => `  <div class="timeline-item" data-timeline-item="${i}">${escapeHtml(item.text)}</div>`).join("\n")
     const prep = splitPrepLines(project, "elRefs", "elRefs").join("\n")
     const splitImport = project.items.some((i) => i.splitTextConfig.enabled)
-    return `// ===== HTML Structure =====\n<div class="timeline">\n${items}\n</div>\n\n// ===== Animation =====\nimport { gsap } from "gsap";\n${splitImport ? `import { SplitText } from "gsap/SplitText";\n` : ``}\nconst elRefs = Array.from(document.querySelectorAll("[data-timeline-item]"));\n\n${prep ? `${prep}\n\n` : ``}${buildTimelineBody(project, "elRefs").join("\n")}\n\n// ===== CSS =====\n${css}`
+    return `// ===== HTML Structure =====\n<div class="timeline">\n${items}\n</div>\n\n// ===== Animation =====\nimport { gsap } from "gsap";\n${splitImport ? `import { SplitText } from "gsap/SplitText";\n` : ``}${customEaseImportLines(project)}\nconst elRefs = Array.from(document.querySelectorAll("[data-timeline-item]"));\n\n${prep ? `${prep}\n\n` : ``}${buildTimelineBody(project, "elRefs").join("\n")}\n\n// ===== CSS =====\n${css}`
   }
 
   if (framework === "react") {
@@ -224,8 +246,7 @@ function generateTimelineComplete(params: TimelineCodeParams): string {
     return `import React, { useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ""}
-export default function Timeline${isTS ? ": React.FC" : ""}() {
+${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ""}${customEaseImportLines(project)}export default function Timeline${isTS ? ": React.FC" : ""}() {
   const elRefs = useRef${isTS ? "<Array<HTMLDivElement | null>>" : ""}([]);
 
   useGSAP(() => {
@@ -260,8 +281,7 @@ ${itemTemplate}
 <script${isTS ? ' lang="ts"' : ""}>
 import { defineComponent, onMounted, ref } from "vue";
 import { gsap } from "gsap";
-${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ""}
-export default defineComponent({
+${hasSplit ? `import { SplitText } from "gsap/SplitText";\n` : ""}${customEaseImportLines(project)}export default defineComponent({
   name: "TimelineSequence",
   setup() {
     const elRefs = ref${isTS ? "<Array<HTMLElement | null>>" : ""}([]);

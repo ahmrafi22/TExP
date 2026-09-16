@@ -1,8 +1,6 @@
 "use client"
 
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Sparkles, Paintbrush, SlidersHorizontal, Crosshair } from "lucide-react"
@@ -10,7 +8,7 @@ import type { TimelineItem, TimelineProject, TimelinePosition } from "@/types/ti
 import AnimationControls from "@/components/animation-controls"
 import SplitTextControls from "@/components/split-text-controls"
 import CustomCssControls from "@/components/custom-css-controls"
-import { SliderField } from "@/components/animation-controls"
+import { SliderField, SelectField, TextField, TransitionField } from "@/components/dial-controls"
 import { useTimelineUiStore } from "@/store/use-timeline-store"
 import type { AnimationConfig, SplitTextConfig } from "@/types/animation"
 
@@ -25,6 +23,12 @@ const easingOptions = [
   "circ.out", "circ.in", "circ.inOut",
   "expo.out", "expo.in", "expo.inOut",
   "sine.out", "sine.in", "sine.inOut",
+]
+
+// Named GSAP eases first, then the DialKit curve editor option.
+const easeSelectOptions = [
+  ...easingOptions.map((e) => ({ value: e, label: e })),
+  { value: "custom", label: "Custom (Bézier)…" },
 ]
 
 /** One-click entrance effects — applied as a "from" state on the selected item.
@@ -114,26 +118,25 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
   return (
     <div className="space-y-5">
       {/* Text content + artboard placement */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide">Text Content</Label>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-5 px-1.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground"
-            onClick={() => onChange({ pos: { xp: 0, yp: 0 } })}
-            title="Recenter this item on the artboard (or drag it there directly)"
-          >
-            <Crosshair className="h-3 w-3 mr-1" />
-            Recenter
-          </Button>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <TextField
+            label="Text Content"
+            value={item.text}
+            onChange={(v) => onChange({ text: v })}
+            placeholder="Animation text…"
+          />
         </div>
-        <Input
-          value={item.text}
-          onChange={(e) => onChange({ text: e.target.value })}
-          placeholder="Animation text…"
-          className="h-8 text-sm bg-muted/40 border-border focus-visible:ring-ring/40 focus-visible:border-ring/50"
-        />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-5 px-1.5 shrink-0 text-[9px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground"
+          onClick={() => onChange({ pos: { xp: 0, yp: 0 } })}
+          title="Recenter this item on the artboard (or drag it there directly)"
+        >
+          <Crosshair className="h-3 w-3 mr-1" />
+          Recenter
+        </Button>
       </div>
 
       {/* Artboard position — live during canvas drags */}
@@ -145,7 +148,7 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
           </Label>
           <span className="text-[9px] font-mono text-muted-foreground/70 tnum">{pos.xp.toFixed(0)}% · {pos.yp.toFixed(0)}%</span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
           <SliderField label="Offset X" value={pos.xp} min={-48} max={48} step={1} onChange={(n) => setPos({ xp: n })} suffix="%" />
           <SliderField label="Offset Y" value={pos.yp} min={-48} max={48} step={1} onChange={(n) => setPos({ yp: n })} suffix="%" />
         </div>
@@ -168,31 +171,23 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
       </div>
 
       {/* Timing */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3.5">
-          <div>
-            <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Position</Label>
-            <Select value={positionType} onValueChange={(v) => setPosition(v as TimelinePosition["type"])}>
-              <SelectTrigger className="h-8 text-xs bg-muted/40 border-border hover:bg-muted/60 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(positionLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <SliderField
-            label="Duration"
-            value={item.duration}
-            min={0.1}
-            max={20}
-            step={0.1}
-            onChange={(n) => onChange({ duration: n })}
-            suffix="s"
-          />
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <SelectField
+          label="Position"
+          value={positionType}
+          options={Object.entries(positionLabels).map(([value, label]) => ({ value, label }))}
+          onChange={(v) => setPosition(v as TimelinePosition["type"])}
+        />
+
+        <SliderField
+          label="Duration"
+          value={item.duration}
+          min={0.1}
+          max={20}
+          step={0.1}
+          onChange={(n) => onChange({ duration: n })}
+          suffix="s"
+        />
 
         {positionType === "atTime" && (
           <SliderField
@@ -207,21 +202,13 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
         )}
 
         {positionType === "label" && (
-          <div className="grid grid-cols-2 gap-3.5 items-end">
-            <div>
-              <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Label</Label>
-              <Select
-                value={labelValue}
-                onValueChange={(v) => onChange({ position: { type: "label", label: v, offset: labelOffset } })}
-              >
-                <SelectTrigger className="h-8 text-xs bg-muted/40 border-border hover:bg-muted/60 transition-colors">
-                  <SelectValue placeholder="Select label" />
-                </SelectTrigger>
-                <SelectContent>
-                  {labels.map((l) => <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <>
+            <SelectField
+              label="Label"
+              value={labelValue}
+              options={labels.map((l) => ({ value: l.name, label: l.name }))}
+              onChange={(v) => onChange({ position: { type: "label", label: v, offset: labelOffset } })}
+            />
             <SliderField
               label="Label Offset"
               value={labelOffset}
@@ -231,7 +218,7 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
               onChange={(n) => onChange({ position: { type: "label", label: labelValue, offset: n } })}
               suffix="s"
             />
-          </div>
+          </>
         )}
 
         {hasOffset && (
@@ -248,28 +235,30 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
       </div>
 
       {/* Ease */}
-      <div>
-        <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Ease (override)</Label>
-        <Select
-          value={item.ease ?? item.animation.ease}
-          onValueChange={(v) => onChange({ ease: v === item.animation.ease ? undefined : v })}
-        >
-          <SelectTrigger className="h-8 text-xs bg-muted/40 border-border hover:bg-muted/60 transition-colors">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {easingOptions.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <SelectField
+        label="Ease (override)"
+        value={item.ease ?? item.animation.ease}
+        options={easeSelectOptions}
+        onChange={(v) => onChange({ ease: v === item.animation.ease ? undefined : v })}
+      />
+      {(item.ease ?? item.animation.ease) === "custom" && (
+        <TransitionField
+          label="Easing Curve"
+          spec={item.animation.customEase}
+          duration={item.duration}
+          onSpecChange={(s) => onChange({ animation: { ...item.animation, customEase: s } })}
+          panelId="texp-timeline"
+          path={`item-${item.id}-customEase`}
+        />
+      )}
 
       {/* Full reused config editors */}
       <Tabs defaultValue="anim" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 gap-1 bg-muted/25 border border-ring/45 rounded-lg p-1 h-auto">
+        <TabsList className="w-full grid grid-cols-3 gap-1 bg-background/60 border border-border/60 rounded-xl p-1 h-auto">
           <TabsTrigger
             value="anim"
             title="Transforms, easing, filters"
-            className="h-9 rounded-md border cursor-pointer text-[11px] font-medium text-muted-foreground border-border bg-muted/50 transition-colors duration-150 hover:bg-accent hover:text-foreground hover:border-muted-foreground/40 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-ring/70 data-[state=active]:shadow-[inset_0_-2px_0_0_var(--primary)] data-[state=active]:[&>svg]:text-ring"
+            className="h-9 rounded-lg cursor-pointer text-[11px] font-medium text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25 data-[state=active]:[&>svg]:text-ring"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Animation
@@ -277,7 +266,7 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
           <TabsTrigger
             value="split"
             title="Split-text and stagger"
-            className="h-9 rounded-md border cursor-pointer text-[11px] font-medium text-muted-foreground border-border bg-muted/50 transition-colors duration-150 hover:bg-accent hover:text-foreground hover:border-muted-foreground/40 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-ring/70 data-[state=active]:shadow-[inset_0_-2px_0_0_var(--primary)] data-[state=active]:[&>svg]:text-ring"
+            className="h-9 rounded-lg cursor-pointer text-[11px] font-medium text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25 data-[state=active]:[&>svg]:text-ring"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Split
@@ -285,7 +274,7 @@ export default function TimelineItemEditor({ item, labels, onChange }: TimelineI
           <TabsTrigger
             value="style"
             title="Typography and colors"
-            className="h-9 rounded-md border cursor-pointer text-[11px] font-medium text-muted-foreground border-border bg-muted/50 transition-colors duration-150 hover:bg-accent hover:text-foreground hover:border-muted-foreground/40 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-ring/70 data-[state=active]:shadow-[inset_0_-2px_0_0_var(--primary)] data-[state=active]:[&>svg]:text-ring"
+            className="h-9 rounded-lg cursor-pointer text-[11px] font-medium text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25 data-[state=active]:[&>svg]:text-ring"
           >
             <Paintbrush className="h-3.5 w-3.5" />
             Style

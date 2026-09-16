@@ -7,6 +7,7 @@ import { gsap } from "gsap"
 import type { CSSProperties } from "react"
 import type { AnimationConfig, SplitTextConfig } from "@/types/animation"
 import { googleFonts } from "@/lib/fonts"
+import { buildCustomEaseFn } from "@/lib/custom-ease"
 
 // ── Style mapping constants ───────────────────────────────────────────────────
 
@@ -282,7 +283,7 @@ export function buildTweenVars(
   const vars: Record<string, unknown> = {
     duration: config.duration,
     delay: config.delay,
-    ease: config.ease,
+    ease: config.ease === "custom" ? buildCustomEaseFn(config.customEase) : config.ease,
     repeat: config.repeat,
     yoyo: config.yoyo,
   }
@@ -299,6 +300,15 @@ export function buildTweenVars(
   if (config.skewX !== 0) vars.skewX = config.skewX
   if (config.skewY !== 0) vars.skewY = config.skewY
   if (config.opacity !== 1) vars.opacity = config.opacity
+
+  // Keep transforms 2D unless a 3D rotation is actually used. GSAP's default
+  // "auto" emits matrix3d() for scale tweens, which promotes the text to a GPU
+  // layer and stretches the rasterized glyphs (blurry mid-scale).
+  const fv = config.fromValues
+  const needs3D =
+    config.rotationX !== 0 || config.rotationY !== 0 ||
+    (fv?.rotationX ?? 0) !== 0 || (fv?.rotationY ?? 0) !== 0
+  if (!needs3D) vars.force3D = false
 
   const filterStr = buildFilterString(config.filter)
   if (filterStr) vars.filter = filterStr

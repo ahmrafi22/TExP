@@ -2,8 +2,11 @@
 
 import React from "react"
 import { usePlaygroundStore } from "@/store/use-playground-store"
-import { Layers, Type, Sparkles, Box, Eye, Activity, Play, Zap, Sliders, Palette } from "lucide-react"
+import { Layers, Type, Sparkles, Box, Eye, Activity, Zap, Sliders, Image } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+
+const TWEEN_LABELS: Record<string, string> = { to: "To", from: "From", fromTo: "From → To" }
+const SPLIT_LABELS: Record<string, string> = { chars: "character", words: "word", lines: "line" }
 
 export default function LayersPanel() {
   const text = usePlaygroundStore((s) => s.text)
@@ -28,169 +31,175 @@ export default function LayersPanel() {
     })
   }
 
+  // The pieces the text actually splits into (mirrors what the engine targets)
+  const splitTargets = splitTextConfig.type === "chars"
+    ? Array.from(text)
+    : text.split(/\s+/).filter(Boolean)
+
+  const bg = animationConfig.customStyles.background
+  const bgLabel = bg !== "transparent" && bg !== "auto" ? bg : "Default"
+
+  const easeLabel = animationConfig.ease === "custom"
+    ? (animationConfig.customEase?.type === "spring" ? "spring" : "bezier")
+    : animationConfig.ease
+
+  const stat = "flex items-baseline justify-between gap-2 min-w-0"
+  const statLabel = "text-[9px] uppercase tracking-wider text-muted-foreground shrink-0"
+  const statValue = "text-[10px] font-mono font-medium text-foreground tnum truncate"
+
   return (
     <div className="flex flex-col h-full bg-card">
-      {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
-            <Layers className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider">Layers & Elements</h3>
-            <p className="text-[10px] text-muted-foreground">DOM nodes & animation properties</p>
-          </div>
-        </div>
+      {/* Header — single compact row */}
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between shrink-0">
+        <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
+          <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+          Layers
+        </span>
         {isAnimating && (
-          <Badge variant="outline" className="text-[10px] bg-primary/10 text-ring border-primary/30 gap-1 animate-pulse font-mono">
-            <Activity className="h-3 w-3" />
+          <Badge variant="outline" className="h-4 text-[9px] px-1 bg-primary/10 text-ring border-primary/30 gap-1 animate-pulse font-mono">
+            <Activity className="h-2.5 w-2.5" />
             LIVE
           </Badge>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs custom-scrollbar">
-        {/* Artboard Root Node */}
-        <div className="p-3 rounded-lg border border-border/80 bg-background/50 space-y-2.5">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="flex items-center gap-2 font-semibold text-foreground">
-              <Box className="h-3.5 w-3.5 text-muted-foreground" />
-              Canvas Artboard
+      <div className="flex-1 overflow-y-auto px-2.5 py-2.5 space-y-1.5 custom-scrollbar">
+        {/* Canvas + Background — two thin rows, no cards */}
+        <div className="flex items-center justify-between text-[10px] leading-none py-0.5">
+          <span className="flex items-center gap-1.5 font-medium text-foreground">
+            <Box className="h-3 w-3 text-muted-foreground" /> Canvas
+          </span>
+          <span className="font-mono text-muted-foreground tnum">1920 × 1080</span>
+        </div>
+        <div className="flex items-center justify-between text-[10px] leading-none py-0.5">
+          <span className="flex items-center gap-1.5 font-medium text-foreground">
+            <Image className="h-3 w-3 text-muted-foreground" /> Background
+          </span>
+          <span className="font-mono text-muted-foreground max-w-[120px] truncate" title={bgLabel}>
+            {bgLabel}
+          </span>
+        </div>
+
+        {/* Text Layer — the only card */}
+        <div className="rounded-lg border border-border bg-background p-2.5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+              <Type className="h-3 w-3 text-muted-foreground" />
+              Text Layer
             </span>
-            <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">1920 × 1080</span>
+            <Eye className="h-3 w-3 text-muted-foreground" aria-label="Visible" />
           </div>
 
-          <div className="pl-3 border-l border-border/60 ml-2 space-y-2">
-            {/* Background Layer */}
-            <div className="p-2 rounded-md border border-border/60 bg-background/60 flex items-center justify-between">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/60" />
-                <span className="font-sans font-medium text-foreground">Background</span>
+          {/* The text itself */}
+          <p className="font-sans text-[12px] font-semibold text-foreground leading-snug break-words px-2 py-1.5 rounded bg-muted/40 border border-border/50">
+            “{text || "…"}”
+          </p>
+
+          {/* Style at a glance — one chip row */}
+          <div className="flex flex-wrap items-center gap-1 text-[9px] font-mono">
+            <span className="bg-muted/50 border border-border/60 px-1.5 py-px rounded text-foreground uppercase">
+              {animationConfig.customStyles.fontSize}
+            </span>
+            <span className="bg-muted/50 border border-border/60 px-1.5 py-px rounded text-foreground capitalize">
+              {animationConfig.customStyles.fontWeight}
+            </span>
+            {splitTextConfig.enabled && (
+              <span className="bg-primary/10 border border-primary/30 px-1.5 py-px rounded text-ring">
+                split: {splitTextConfig.type}
               </span>
-              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                {animationConfig.customStyles.background !== "transparent" ? animationConfig.customStyles.background : "Default / Solid"}
+            )}
+          </div>
+
+          {/* Animation summary */}
+          <div className="rounded-md bg-muted/25 border border-border/50 px-2 py-1.5 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-ring">
+                <Sparkles className="h-2.5 w-2.5" />
+                Animation
+              </span>
+              <Badge variant="secondary" className="h-4 text-[8px] px-1 uppercase font-mono">
+                {TWEEN_LABELS[animationConfig.tweenType] ?? animationConfig.tweenType}
+              </Badge>
+            </div>
+
+            {/* Dense label → value rows */}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+              <div className={stat}>
+                <span className={statLabel}>Dur</span>
+                <span className={statValue}>{animationConfig.duration}s</span>
+              </div>
+              <div className={stat}>
+                <span className={statLabel}>Ease</span>
+                <span className={statValue} title={easeLabel}>{easeLabel}</span>
+              </div>
+              {animationConfig.delay > 0 && (
+                <div className={stat}>
+                  <span className={statLabel}>Delay</span>
+                  <span className={statValue}>{animationConfig.delay}s</span>
+                </div>
+              )}
+              {animationConfig.repeat !== 0 && (
+                <div className={stat}>
+                  <span className={statLabel}>Repeat</span>
+                  <span className={statValue}>
+                    {animationConfig.repeat === -1 ? "∞" : `×${animationConfig.repeat}`}{animationConfig.yoyo ? " yoyo" : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {activeTransforms.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {activeTransforms.map((t, i) => (
+                  <span key={i} className="text-[9px] font-mono bg-background border border-border/60 px-1 py-px rounded">
+                    <span className="text-muted-foreground">{t.label}</span>{" "}
+                    <span className="text-foreground">{t.value}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Targets */}
+          <div className="border-t border-border/60 pt-1.5 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-ring">
+                <Zap className="h-2.5 w-2.5" />
+                Targets
+              </span>
+              <span className="text-[9px] font-mono bg-muted px-1.5 py-px rounded text-muted-foreground tnum">
+                {splitTextConfig.enabled
+                  ? splitTextConfig.type === "lines" ? "by line" : `${splitTargets.length} pieces`
+                  : "1 piece"}
               </span>
             </div>
 
-            {/* Text Element Node */}
-            <div className="p-3 rounded-md border border-border bg-background space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 font-medium text-foreground">
-                  <Type className="h-3.5 w-3.5 text-muted-foreground" />
-                  &lt;div class="text-target"&gt;
-                </span>
-                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-
-              {/* Text content & styles */}
-              <div className="pl-3 border-l border-border/60 ml-1 space-y-1.5 text-[11px]">
-                <div className="flex items-center justify-between py-0.5">
-                  <span className="text-muted-foreground">Text:</span>
-                  <span className="text-foreground font-sans font-medium truncate max-w-[150px]">"{text}"</span>
-                </div>
-                <div className="flex items-center justify-between py-0.5">
-                  <span className="text-muted-foreground">Style:</span>
-                  <span className="text-foreground">{animationConfig.customStyles.fontSize} · {animationConfig.customStyles.fontWeight}</span>
-                </div>
-              </div>
-
-              {/* Attached Animation Properties Card */}
-              <div className="mt-2 p-2.5 rounded bg-muted/40 border border-border/70 space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-ring">
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3" />
-                    GSAP Properties
-                  </span>
-                  <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase font-mono">
-                    {animationConfig.tweenType}
-                  </Badge>
-                </div>
-
-                {/* Timing & Ease — stacked full-width rows so nothing clips */}
-                <div className="space-y-1 text-[10px] text-muted-foreground font-mono">
-                  <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
-                    <span>Duration:</span>
-                    <span className="text-foreground font-medium tnum">{animationConfig.duration}s</span>
-                  </div>
-                  <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
-                    <span>Ease:</span>
-                    <span className="text-foreground font-medium truncate">{animationConfig.ease}</span>
-                  </div>
-                  {animationConfig.delay > 0 && (
-                    <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
-                      <span>Delay:</span>
-                      <span className="text-foreground font-medium tnum">{animationConfig.delay}s</span>
-                    </div>
-                  )}
-                  {animationConfig.repeat !== 0 && (
-                    <div className="bg-background/80 px-2 py-1.5 rounded border border-border/40 flex justify-between gap-2">
-                      <span>Repeat:</span>
-                      <span className="text-foreground font-medium tnum">{animationConfig.repeat}{animationConfig.yoyo ? " (yoyo)" : ""}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Active Transform Parameters */}
-                {activeTransforms.length > 0 && (
-                  <div className="pt-1.5 border-t border-border/50 space-y-1">
-                    <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Sliders className="h-2.5 w-2.5" />
-                      <span>Active Transforms</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {activeTransforms.map((t, i) => (
-                        <span key={i} className="text-[9px] bg-background border border-border px-1.5 py-0.5 rounded text-foreground font-mono">
-                          <span className="text-muted-foreground">{t.label}:</span> {t.value}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Split Text Sublayers / Targets */}
-              <div className="mt-2 pt-2 border-t border-border/60 space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-semibold">
-                  <span className="flex items-center gap-1.5 text-ring">
-                    <Zap className="h-3 w-3" />
-                    Target Elements
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal">
-                    {splitTextConfig.enabled ? `Split .${splitTextConfig.type}` : "Single target"}
-                  </span>
-                </div>
-
-                {splitTextConfig.enabled ? (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] bg-primary/10 border border-primary/25 px-2 py-1 rounded text-ring">
-                      <span>Stagger: {splitTextConfig.stagger}s</span>
-                      <span>From: {splitTextConfig.staggerFrom}</span>
-                    </div>
-                    {splitTextConfig.type === "lines" ? (
-                      <div className="text-[10px] text-muted-foreground bg-muted/20 p-1.5 rounded border border-border/40 italic">
-                        .line targets are computed from rendered layout
-                      </div>
-                    ) : (
-                      <div className="pl-2 space-y-1 text-[10px] text-muted-foreground max-h-36 overflow-y-auto custom-scrollbar">
-                        {(splitTextConfig.type === "chars"
-                          ? Array.from(text)
-                          : text.split(/\s+/).filter(Boolean)
-                        ).map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-1 px-1.5 rounded bg-muted/30 hover:bg-muted/60 border border-border/40">
-                            <span className="text-ring">.{splitTextConfig.type === "chars" ? "char" : "word"}[{idx}]</span>
-                            <span className="font-sans font-medium text-foreground">"{item === " " ? "\u2423" : item}"</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+            {splitTextConfig.enabled ? (
+              <>
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  Each <span className="text-foreground font-medium">{SPLIT_LABELS[splitTextConfig.type] ?? splitTextConfig.type}</span> animates separately
+                  {splitTextConfig.stagger > 0 && <> — <span className="text-foreground font-mono tnum">{splitTextConfig.stagger}s</span> apart, from the <span className="text-foreground font-medium">{splitTextConfig.staggerFrom}</span></>}.
+                </p>
+                {splitTextConfig.type === "lines" ? (
+                  <p className="text-[9px] text-muted-foreground">
+                    Lines are detected from the rendered layout.
+                  </p>
                 ) : (
-                  <div className="text-[10px] text-muted-foreground bg-muted/20 p-1.5 rounded border border-border/40 italic">
-                    Single DOM element target: &lt;div&gt;
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar">
+                    {splitTargets.map((item, idx) => (
+                      <span key={idx} className="text-[9px] font-mono bg-muted/40 border border-border/50 rounded px-1 py-px tnum">
+                        <span className="text-muted-foreground">{idx + 1}</span>{" "}
+                        <span className="text-foreground">“{item === " " ? "\u2423" : item}”</span>
+                      </span>
+                    ))}
                   </div>
                 )}
-              </div>
-            </div>
+              </>
+            ) : (
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                The whole text animates as <span className="text-foreground font-medium">one unit</span>. Turn on <span className="text-foreground font-medium">Split Text</span> to animate per character, word, or line.
+              </p>
+            )}
           </div>
         </div>
       </div>

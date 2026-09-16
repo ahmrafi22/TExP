@@ -1,10 +1,27 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { usePlaygroundStore } from "@/store/use-playground-store"
-import { History, Undo2, Redo2, RotateCcw, Clock, CheckCircle2, ArrowRight } from "lucide-react"
+import {
+  Undo2,
+  Redo2,
+  Trash2,
+  Clock,
+  Type,
+  Wand2,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+
+// Pick a small icon per action family from the recorded label.
+function iconForLabel(label: string) {
+  if (label === "Update text") return Type
+  if (label.startsWith("Apply preset")) return Wand2
+  if (label.toLowerCase().includes("reset")) return RotateCcw
+  return Sparkles
+}
 
 export default function HistoryPanel() {
   const history = usePlaygroundStore((s) => s.history)
@@ -24,124 +41,127 @@ export default function HistoryPanel() {
   const canUndo = historyIndex > 0
   const canRedo = historyIndex < history.length - 1
 
-  return (
-    <div className="flex flex-col h-full bg-card">
-      {/* Header controls */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
-            <History className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider">Action History</h3>
-            <p className="text-[10px] text-muted-foreground">{history.length} recorded actions</p>
-          </div>
-        </div>
+  // Keep the current state's row visible as history grows or jumps.
+  const rowRefs = useRef<(HTMLButtonElement | null)[]>([])
+  useEffect(() => {
+    rowRefs.current[historyIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [historyIndex, history.length])
 
-        <div className="flex items-center gap-1">
+  return (
+    <div className="flex flex-col h-full bg-card min-h-0">
+      {/* Slim header: title + count, undo/redo/clear */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 shrink-0">
+        <div className="flex items-center gap-2">
+          <h3 className="text-[11px] font-mono font-semibold uppercase tracking-[0.08em] text-foreground">History</h3>
+          <span className="px-1.5 py-0.5 rounded-md bg-muted/60 text-[9px] font-mono tnum text-muted-foreground">
+            {history.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-0.5">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={undo}
             disabled={!canUndo}
-            className="h-7 w-7 p-0"
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
             title="Undo (Ctrl+Z)"
           >
             <Undo2 className="h-3.5 w-3.5" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={redo}
             disabled={!canRedo}
-            className="h-7 w-7 p-0"
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
             title="Redo (Ctrl+Y)"
           >
             <Redo2 className="h-3.5 w-3.5" />
           </Button>
+          <div className="w-px h-3.5 bg-border/60 mx-1" />
           <Button
             variant="ghost"
             size="sm"
             onClick={clearHistory}
-            className="h-7 px-2 text-[10px] text-muted-foreground hover:text-destructive"
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
             title="Clear history"
           >
-            <RotateCcw className="h-3 w-3 mr-1" />
-            Reset
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
 
-      {/* History Timeline */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+      {/* Timeline list */}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-2 py-2">
         {history.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-xs">
-            No history recorded yet.
+          <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground/60">
+            <Clock className="h-5 w-5" />
+            <p className="text-[10px]">No actions recorded yet.</p>
           </div>
         ) : (
-          history.map((entry, index) => {
-            const isCurrent = index === historyIndex
-            const timeStr = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          <div className="relative">
+            {/* spine */}
+            <div className="absolute left-[14px] top-3 bottom-3 w-px bg-border/70" />
+            <ul className="space-y-0.5">
+              {history.map((entry, index) => {
+                const isCurrent = index === historyIndex
+                const isFuture = index > historyIndex
+                const Icon = iconForLabel(entry.label)
+                const timeStr = new Date(entry.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 
-            return (
-              <div
-                key={entry.id}
-                onClick={() => jumpToHistory(index)}
-                className={`group relative flex items-start gap-3 p-2.5 rounded-lg border text-left transition-colors cursor-pointer ${
-                  isCurrent
-                    ? "bg-accent border-ring/50 text-foreground"
-                    : "bg-background/40 border-border/60 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {/* Active indicator bar */}
-                {isCurrent && (
-                  <div className="absolute left-0 inset-y-1 w-1 bg-primary rounded-r-full" />
-                )}
-
-                <div className="mt-0.5 shrink-0">
-                  {isCurrent ? (
-                    <CheckCircle2 className="h-4 w-4 text-ring" />
-                  ) : (
-                    <Clock className="h-3.5 w-3.5 opacity-60 group-hover:opacity-100" />
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`text-xs font-medium truncate ${isCurrent ? "font-semibold" : ""}`}>
-                      {entry.label}
-                    </span>
-                    <span className="text-[10px] opacity-50 shrink-0 font-mono">
-                      {mounted ? timeStr : "--:--:--"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate max-w-[180px]">
-                      Text: "{entry.state.text}"
-                    </span>
-                    {entry.state.splitTextConfig.enabled && (
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
-                        Split: {entry.state.splitTextConfig.type}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {!isCurrent && (
-                  <div className="opacity-0 group-hover:opacity-100 self-center transition-opacity">
-                    <ArrowRight className="h-3.5 w-3.5 text-ring" />
-                  </div>
-                )}
-              </div>
-            )
-          })
+                return (
+                  <li key={entry.id} className="relative">
+                    {/* node dot on the spine */}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute left-[10px] top-1/2 -translate-y-1/2 z-10 rounded-full transition-all",
+                        isCurrent
+                          ? "h-[9px] w-[9px] bg-primary ring-[3px] ring-primary/20"
+                          : "h-[5px] w-[5px] bg-muted-foreground/40",
+                      )}
+                    />
+                    <button
+                      ref={(el) => { rowRefs.current[index] = el }}
+                      onClick={() => jumpToHistory(index)}
+                      title={`Jump to “${entry.label}”`}
+                      className={cn(
+                        "group w-full flex items-center gap-2 pl-8 pr-2 py-1.5 rounded-lg text-left cursor-pointer transition-all duration-150",
+                        isCurrent
+                          ? "bg-popover shadow-md ring-1 ring-primary/25"
+                          : "hover:bg-muted/50",
+                        isFuture && "opacity-45 hover:opacity-80",
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-3.5 w-3.5 shrink-0 transition-colors",
+                          isCurrent ? "text-ring" : "text-muted-foreground/60 group-hover:text-muted-foreground",
+                        )}
+                      />
+                      <span className="flex-1 min-w-0 flex flex-col">
+                        <span
+                          className={cn(
+                            "text-[11px] truncate",
+                            isCurrent ? "font-semibold text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                          )}
+                        >
+                          {entry.label}
+                        </span>
+                        <span className="text-[9px] font-mono text-muted-foreground/50 truncate">
+                          “{entry.state.text}”
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-[9px] font-mono tnum text-muted-foreground/50">
+                        {mounted ? timeStr : ""}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         )}
-      </div>
-
-      <div className="p-3 border-t border-border bg-muted/20 text-center">
-        <p className="text-[11px] text-muted-foreground">
-          Click any action to jump instantly to that state.
-        </p>
       </div>
     </div>
   )

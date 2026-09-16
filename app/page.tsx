@@ -127,43 +127,43 @@ export default function GSAPPlayground() {
   const canUndo = historyIndex > 0
   const canRedo = historyIndex < history.length - 1
 
-  // Left Sidebar Content (Figma Left Panel)
+  // Left Sidebar Content (Figma Left Panel) — 32px vertical icon rail + panel
   const leftSidebarContent = (
-    <Tabs defaultValue="layers" onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-      <div id="tour-left-tabs" className="px-2 pt-2 pb-0">
-        <TabsList className="w-full grid grid-cols-3 gap-1 bg-muted/25 border border-ring/45 rounded-lg p-1 h-auto">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-row flex-1 min-h-0 w-full">
+      <div id="tour-left-tabs" className="w-8 min-w-8 shrink-0 border-r border-border/60 bg-background/60 flex flex-col items-center gap-1 py-2">
+        <TabsList className="flex flex-col items-center gap-1 w-auto h-auto p-0 bg-transparent rounded-none">
           <TabsTrigger
             value="layers"
             title="Layers panel"
-            className="h-10 rounded-md border cursor-pointer text-[11px] font-medium text-muted-foreground border-border bg-muted/50 transition-colors duration-150 hover:bg-accent hover:text-foreground hover:border-muted-foreground/40 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-ring/70 data-[state=active]:shadow-[inset_0_-2px_0_0_var(--primary)] data-[state=active]:[&>svg]:text-ring"
+            aria-label="Layers"
+            className="h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
           >
             <Layers className="h-3.5 w-3.5" />
-            Layers
           </TabsTrigger>
           <TabsTrigger
             value="presets"
             title="Animation presets"
-            className="h-10 rounded-md border cursor-pointer text-[11px] font-medium text-muted-foreground border-border bg-muted/50 transition-colors duration-150 hover:bg-accent hover:text-foreground hover:border-muted-foreground/40 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-ring/70 data-[state=active]:shadow-[inset_0_-2px_0_0_var(--primary)] data-[state=active]:[&>svg]:text-ring"
+            aria-label="Presets"
+            className="h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
           >
             <Wand2 className="h-3.5 w-3.5" />
-            Presets
           </TabsTrigger>
           <TabsTrigger
             value="history"
             title="Action history"
-            className="h-10 rounded-md border cursor-pointer text-[11px] font-medium text-muted-foreground border-border bg-muted/50 transition-colors duration-150 hover:bg-accent hover:text-foreground hover:border-muted-foreground/40 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-ring/70 data-[state=active]:shadow-[inset_0_-2px_0_0_var(--primary)] data-[state=active]:[&>svg]:text-ring"
+            aria-label="History"
+            className="h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
           >
             <History className="h-3.5 w-3.5" />
-            History
           </TabsTrigger>
         </TabsList>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden mt-1">
+      <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         <TabsContent value="layers" className="h-full m-0 data-[state=active]:flex flex-col">
           <LayersPanel />
         </TabsContent>
-            <TabsContent value="presets" className="h-full m-0 data-[state=active]:flex flex-col overflow-y-auto px-4 py-4">
+        <TabsContent value="presets" className="h-full m-0 data-[state=active]:flex flex-col overflow-y-auto px-4 py-4">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-muted-foreground" />
@@ -266,7 +266,7 @@ export default function GSAPPlayground() {
         <div id="tour-header" className="flex items-center gap-3">
           <TexpLogo className="h-6 w-auto text-foreground" />
           <div className="h-4 w-px bg-border" />
-          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.3.1</span>
+          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.4.0</span>
         </div>
 
         {/* Centered workspace mode switcher — true navbar center (desktop) */}
@@ -346,8 +346,8 @@ export default function GSAPPlayground() {
         <>
       {/* Figma 3-Column Workspace Layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left Sidebar (Layers / Presets / History) */}
-        <div className="hidden lg:flex w-[300px] min-w-[300px] border-r border-border bg-card flex-col">
+        {/* Left Sidebar — vertical icon rail + Layers / Presets / History panel */}
+        <div className="hidden lg:flex w-[300px] min-w-[300px] border-r border-border bg-card flex-row">
           {leftSidebarContent}
         </div>
 

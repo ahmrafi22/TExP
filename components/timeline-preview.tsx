@@ -9,6 +9,7 @@ import { buildGsapTimeline, computeLayout, itemCycleDuration, validateProject } 
 import { computeTextStyles, resetAndPrepareElement, resolveTargets } from "@/lib/animation-engine"
 import { cn } from "@/lib/utils"
 import type { TimelineItem } from "@/types/timeline"
+import DialTimelineBridge from "@/components/dial-timeline-bridge"
 
 /** Default placement when an item has no stored pos — even vertical stack. */
 function fallbackPos(index: number, total: number): { xp: number; yp: number } {
@@ -25,6 +26,7 @@ export default function TimelinePreview() {
   const itemElsRef = useRef<Record<string, HTMLElement>>({})
   const lastSyncRef = useRef(0)
   const canvasRef = useRef<HTMLDivElement>(null)
+  const dockSlotRef = useRef<HTMLDivElement>(null)
 
   const project = useTimelineProjectStore((s) => s.project)
   const revision = useTimelineProjectStore((s) => s.revision)
@@ -224,6 +226,9 @@ export default function TimelinePreview() {
 
   return (
     <div className="flex flex-col h-full gap-3">
+      {/* DialKit timeline dock — aligned over the transport card's slot */}
+      <DialTimelineBridge getTl={() => tlRef.current} slotRef={dockSlotRef} />
+
       {/* Artboard */}
       <div
         ref={canvasRef}
@@ -303,49 +308,55 @@ export default function TimelinePreview() {
         </div>
       )}
 
-      {/* Transport */}
-      <div className="flex items-center gap-3 bg-card/90 border border-border rounded-xl px-3 py-2">
-        <div className="flex items-center gap-1.5">
-          <Button size="sm" variant="ghost" onClick={toggle} disabled={!canPlay} className="h-8 w-8 p-0" title="Play / Pause (Space)">
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={restart} disabled={!canPlay} className="h-8 w-8 p-0" title="Restart">
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+      {/* Transport + DialKit timeline — one card. The dock is portaled to
+          <body>; DialTimelineBridge aligns it over the slot below. */}
+      <div className="bg-card/90 border border-border rounded-xl px-3 py-2 flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="ghost" onClick={toggle} disabled={!canPlay} className="h-8 w-8 p-0" title="Play / Pause (Space)">
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={restart} disabled={!canPlay} className="h-8 w-8 p-0" title="Restart">
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <input
+            type="range"
+            min={0}
+            max={Math.max(0.001, totalDisplay)}
+            step={0.01}
+            value={Math.min(currentTime, totalDisplay)}
+            onChange={(e) => handleScrub(parseFloat(e.target.value))}
+            disabled={!canPlay}
+            className="flex-1 h-1.5 cursor-pointer "
+            aria-label="Scrub"
+            style={{ background: `linear-gradient(to right, var(--primary) ${progressPct}%, var(--border) ${progressPct}%)` }}
+          />
+
+          <div className="text-[11px] font-mono text-muted-foreground whitespace-nowrap tabular-nums">
+            {formatTime(currentTime)} / {Number.isFinite(layout.totalDuration) ? formatTime(layout.totalDuration) : "∞"}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+            {[0.5, 1, 2].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                className={cn(
+                  "px-1.5 py-0.5 rounded text-[10px] font-medium transition-all",
+                  speed === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
         </div>
 
-        <input
-          type="range"
-          min={0}
-          max={Math.max(0.001, totalDisplay)}
-          step={0.01}
-          value={Math.min(currentTime, totalDisplay)}
-          onChange={(e) => handleScrub(parseFloat(e.target.value))}
-          disabled={!canPlay}
-          className="flex-1 h-1.5 cursor-pointer "
-          aria-label="Scrub"
-          style={{ background: `linear-gradient(to right, var(--primary) ${progressPct}%, var(--border) ${progressPct}%)` }}
-        />
-
-        <div className="text-[11px] font-mono text-muted-foreground whitespace-nowrap tabular-nums">
-          {formatTime(currentTime)} / {Number.isFinite(layout.totalDuration) ? formatTime(layout.totalDuration) : "∞"}
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
-          {[0.5, 1, 2].map((s) => (
-            <button
-              key={s}
-              onClick={() => setSpeed(s)}
-              className={cn(
-                "px-1.5 py-0.5 rounded text-[10px] font-medium transition-all",
-                speed === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {s}x
-            </button>
-          ))}
-        </div>
+        {/* Reserved slot — the portaled dock is aligned on top of this */}
+        <div ref={dockSlotRef} className="w-full min-h-[var(--dial-tl-h,0px)]" />
       </div>
     </div>
   )

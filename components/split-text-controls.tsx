@@ -1,10 +1,9 @@
 "use client"
 
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { usePlaygroundStore } from "@/store/use-playground-store"
-import { SliderField } from "./animation-controls"
+import { SliderField, SelectField } from "@/components/dial-controls"
 import type { SplitTextConfig } from "@/types/animation"
 
 interface SplitTextControlsProps {
@@ -38,23 +37,17 @@ export default function SplitTextControls({ config: propConfig, setSplitTextConf
       </div>
 
       {config.enabled && (
-        <div className="space-y-4 pt-1.5 animate-fade-in duration-200">
-          <div>
-            <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Split Type</Label>
-            <Select
-              value={config.type}
-              onValueChange={(value: "chars" | "words" | "lines") => handleChange("type", value)}
-            >
-              <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="chars">Characters</SelectItem>
-                <SelectItem value="words">Words</SelectItem>
-                <SelectItem value="lines">Lines</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex flex-col gap-1.5 pt-1.5 animate-fade-in duration-200">
+          <SelectField
+            label="Split Type"
+            value={config.type}
+            options={[
+              { value: "chars", label: "Characters" },
+              { value: "words", label: "Words" },
+              { value: "lines", label: "Lines" },
+            ]}
+            onChange={(value) => handleChange("type", value)}
+          />
 
           <SliderField
             label="Stagger Delay"
@@ -63,27 +56,21 @@ export default function SplitTextControls({ config: propConfig, setSplitTextConf
             max={1}
             step={0.01}
             onChange={(n) => handleChange("stagger", n)}
-            suffix="seconds"
+            suffix="s"
           />
 
-          <div>
-            <Label className="text-[11px] font-medium text-muted-foreground/95 tracking-wide mb-1.5 block">Stagger Origin</Label>
-            <Select
-              value={config.staggerFrom}
-              onValueChange={(value: "start" | "center" | "end" | "random" | "edges") => handleChange("staggerFrom", value)}
-            >
-              <SelectTrigger className="h-8 text-xs bg-muted/40 border-border/80 hover:bg-muted/60 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="start">Start (Left to Right)</SelectItem>
-                <SelectItem value="center">Center (Outward)</SelectItem>
-                <SelectItem value="end">End (Right to Left)</SelectItem>
-                <SelectItem value="random">Randomized</SelectItem>
-                <SelectItem value="edges">Edges (Inward)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="Stagger Origin"
+            value={config.staggerFrom}
+            options={[
+              { value: "start", label: "Start (Left to Right)" },
+              { value: "center", label: "Center (Outward)" },
+              { value: "end", label: "End (Right to Left)" },
+              { value: "random", label: "Randomized" },
+              { value: "edges", label: "Edges (Inward)" },
+            ]}
+            onChange={(value) => handleChange("staggerFrom", value)}
+          />
         </div>
       )}
     </div>

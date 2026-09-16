@@ -90,7 +90,7 @@ export default function CodeGenerator({ source, extraTabs }: CodeGeneratorProps 
       {/* Framework & Language selectors */}
       <div className="flex items-center gap-4">
         {/* Framework chips */}
-        <div className="flex items-center gap-1 bg-muted/25 border border-ring/45 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-background/60 border border-border/60 rounded-xl p-1">
           {frameworkOptions.map((fw) => {
             const Icon = fw.icon
             const isActive = framework === fw.value
@@ -99,10 +99,10 @@ export default function CodeGenerator({ source, extraTabs }: CodeGeneratorProps 
                 key={fw.value}
                 onClick={() => onFrameworkChange(fw.value)}
                 aria-pressed={isActive}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-md border cursor-pointer text-xs font-medium transition-colors duration-150 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg cursor-pointer text-xs font-medium transition-all duration-150 ${
                   isActive
-                    ? "bg-card text-foreground font-semibold border-ring/70 shadow-[inset_0_-2px_0_0_var(--primary)]"
-                    : "border-border bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground hover:border-muted-foreground/40"
+                    ? "bg-popover text-foreground font-semibold shadow-md ring-1 ring-primary/25"
+                    : "bg-card/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
                 <Icon className={`h-3.5 w-3.5 ${isActive ? fw.color : ""}`} />
@@ -113,7 +113,7 @@ export default function CodeGenerator({ source, extraTabs }: CodeGeneratorProps 
         </div>
 
         {/* Language chips */}
-        <div className="flex items-center gap-1 bg-muted/25 border border-ring/45 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-background/60 border border-border/60 rounded-xl p-1">
           {languageOptions.map((lang) => {
             const Icon = lang.icon
             const isActive = language === lang.value
@@ -122,10 +122,10 @@ export default function CodeGenerator({ source, extraTabs }: CodeGeneratorProps 
                 key={lang.value}
                 onClick={() => onLanguageChange(lang.value)}
                 aria-pressed={isActive}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-md border cursor-pointer text-xs font-medium transition-colors duration-150 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg cursor-pointer text-xs font-medium transition-all duration-150 ${
                   isActive
-                    ? "bg-card text-foreground font-semibold border-ring/70 shadow-[inset_0_-2px_0_0_var(--primary)]"
-                    : "border-border bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground hover:border-muted-foreground/40"
+                    ? "bg-popover text-foreground font-semibold shadow-md ring-1 ring-primary/25"
+                    : "bg-card/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
                 <Icon className={`h-3.5 w-3.5 ${isActive ? lang.color : ""}`} />

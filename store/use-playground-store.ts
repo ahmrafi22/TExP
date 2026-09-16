@@ -17,6 +17,7 @@ export const defaultAnimationConfig: AnimationConfig = {
   duration: 1,
   delay: 0,
   ease: "power1.out",
+  customEase: { type: "easing", ease: [0.25, 0.1, 0.25, 1] },
   tweenType: "to",
   stagger: 0,
   repeat: 0,

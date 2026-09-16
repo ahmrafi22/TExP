@@ -165,7 +165,9 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef>((_props, ref) => {
               ref={textRef}
               className="text-center select-none"
               style={{
-                willChange: "transform, opacity, filter",
+                // No will-change here: promoting the text to a GPU layer makes
+                // the browser stretch a rasterized bitmap during scale tweens,
+                // which renders the glyphs blurry mid-animation.
                 color: animationConfig.customStyles.color === "inherit"
                   ? (isAutoBackground ? "var(--canvas-text)" : undefined)
                   : undefined,

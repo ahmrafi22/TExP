@@ -266,7 +266,7 @@ export default function GSAPPlayground() {
         <div id="tour-header" className="flex items-center gap-3">
           <TexpLogo className="h-6 w-auto text-foreground" />
           <div className="h-4 w-px bg-border" />
-          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.4.0</span>
+          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.6.7</span>
         </div>
 
         {/* Centered workspace mode switcher — true navbar center (desktop) */}

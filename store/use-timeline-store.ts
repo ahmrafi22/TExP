@@ -335,7 +335,11 @@ interface TimelineUiState {
   // Live artboard-drag position — mirrored here (not the project store) so the
   // inspector can show values updating in real time without rebuilding GSAP.
   liveItemPos: { id: string; xp: number; yp: number } | null
+  // Bumped when an external action (applying a preset) wants the next timeline
+  // rebuild to start playing immediately, mirroring Text mode's click→play.
+  autoplayNonce: number
 
+  requestAutoplay: () => void
   setSelectedItem: (id: string | null) => void
   setIsPlaying: (playing: boolean) => void
   setCurrentTime: (time: number) => void
@@ -357,7 +361,9 @@ export const useTimelineUiStore = create<TimelineUiState>((set) => ({
   exportFramework: "vanilla",
   exportLanguage: "ts",
   liveItemPos: null,
+  autoplayNonce: 0,
 
+  requestAutoplay: () => set((s) => ({ autoplayNonce: s.autoplayNonce + 1 })),
   setSelectedItem: (id) => set({ selectedItemId: id }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setCurrentTime: (time) => set({ currentTime: time }),

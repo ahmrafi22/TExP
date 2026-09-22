@@ -53,6 +53,43 @@ export interface TimelineProject {
   totalDuration: number // derived — computed from items/labels, never edited manually
 }
 
+// ── Sequence presets (composed starting points for the creator) ──────────────
+
+/**
+ * A timeline preset is a whole multi-layer composition, not a single tween.
+ * `items` are authored without ids/order (buildPresetProject assigns them) and
+ * with partial configs that are merged over the app defaults.
+ */
+export type TimelinePresetCategory =
+  | "title"
+  | "editorial"
+  | "kinetic"
+  | "broadcast"
+  | "social"
+  | "3d"
+
+export interface TimelinePresetItem {
+  label: string
+  text: string
+  animation: Omit<Partial<AnimationConfig>, "customStyles"> & {
+    customStyles?: Partial<AnimationConfig["customStyles"]>
+  }
+  splitTextConfig?: Partial<SplitTextConfig>
+  duration: number
+  position: TimelinePosition
+  ease?: string
+  pos?: TimelinePos
+}
+
+export interface TimelinePreset {
+  id: string
+  name: string
+  description: string
+  category: TimelinePresetCategory
+  items: TimelinePresetItem[]
+  labels?: { name: string; time: number }[]
+}
+
 // ── Derived layout model (computed, not persisted) ───────────────────────────
 
 export interface TimelineLayoutEntry {

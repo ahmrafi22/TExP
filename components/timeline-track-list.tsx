@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { GripVertical, Copy, Trash2, Layers } from "lucide-react"
 import { useTimelineProjectStore, useTimelineUiStore } from "@/store/use-timeline-store"
 import { computeLayout, blockColorFor } from "@/utils/timeline-builder"
 import { cn } from "@/lib/utils"
 
-export default function TimelineTrackList() {
+export default function TimelineTrackList({ action, footer }: { action?: ReactNode; footer?: ReactNode }) {
   const project = useTimelineProjectStore((s) => s.project)
   const reorderItems = useTimelineProjectStore((s) => s.reorderItems)
   const removeItem = useTimelineProjectStore((s) => s.removeItem)
@@ -39,27 +39,29 @@ export default function TimelineTrackList() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Section header */}
-      <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+      {/* Section header — same chrome as the inspector: py-2 + hairline rule */}
+      <div className="px-3 py-2 border-b border-border shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Layers className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.1em] text-muted-foreground">Tracks</span>
+          <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Tracks</span>
+          <span className="h-4 min-w-4 px-1 rounded-full wash-5 border border-border/60 text-[10px] font-mono text-muted-foreground flex items-center justify-center tnum">
+            {items.length}
+          </span>
         </div>
-        <span className="h-4 min-w-4 px-1 rounded-full bg-muted/60 border border-border/60 text-[9px] font-mono text-muted-foreground flex items-center justify-center tnum">
-          {items.length}
-        </span>
+        {action}
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-2">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pt-2 pb-2">
         {ordered.length === 0 ? (
           <div className="mt-1 rounded-lg border border-dashed border-border/80 px-3 py-6 text-center">
             <p className="text-[11px] font-medium text-muted-foreground">No tracks yet</p>
             <p className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed">
-              Use <span className="font-mono text-muted-foreground">Add Animation</span> to sequence your first layer.
+              Use <span className="font-mono text-muted-foreground">Presets</span> to drop in a finished sequence, or the
+              <span className="font-mono text-muted-foreground"> + </span> above to add your first layer.
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1.5">
             {ordered.map((item, index) => {
               const isSelected = selectedItemId === item.id
               const isDragging = dragIndex === index
@@ -84,12 +86,12 @@ export default function TimelineTrackList() {
                   }}
                   onClick={() => setSelectedItem(item.id)}
                   className={cn(
-                    "group relative flex items-center gap-2 rounded-md pl-2 pr-1.5 h-9 cursor-pointer transition-colors select-none overflow-hidden",
+                    "group relative flex items-center gap-2 rounded-md pl-2 pr-1.5 h-[30px] cursor-pointer transition-colors duration-150 select-none overflow-hidden",
                     isDragging && "opacity-40",
                     isOver && "before:absolute before:inset-x-1 before:-top-px before:h-0.5 before:rounded-full before:bg-primary",
                     isSelected
-                      ? "bg-accent"
-                      : "hover:bg-muted/40",
+                      ? "wash-12"
+                      : "wash-5 hover:wash-9",
                   )}
                 >
                   {/* Selection wire — same lime rule used across the app */}
@@ -106,17 +108,17 @@ export default function TimelineTrackList() {
                     aria-hidden
                   />
 
-                  <span className="text-[9px] font-mono text-muted-foreground/50 tnum w-3.5 shrink-0">{index + 1}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground/50 tnum w-3.5 shrink-0">{index + 1}</span>
 
                   <div className="flex-1 min-w-0">
-                    <span className={cn("block text-[11px] font-medium truncate", isSelected ? "text-foreground" : "text-foreground/90")}>
+                    <span className={cn("block text-xs font-medium truncate", isSelected ? "text-foreground" : "text-foreground/90")}>
                       {item.label}
                     </span>
                   </div>
 
                   {/* Right slot: timing readout, overlaid by actions on hover */}
                   <div className="relative shrink-0 flex items-center justify-end">
-                    <span className="text-[9px] font-mono text-muted-foreground/60 tnum transition-opacity group-hover:opacity-0">
+                    <span className="text-[10px] font-mono text-muted-foreground/60 tnum transition-opacity group-hover:opacity-0">
                       {bounds.start.toFixed(2)}–{bounds.end.toFixed(2)}s
                     </span>
                     <div className="absolute right-0 flex items-center gap-px opacity-0 group-hover:opacity-100 transition-opacity">
@@ -149,6 +151,8 @@ export default function TimelineTrackList() {
             })}
           </div>
         )}
+
+        {footer && <div className="mt-3 border-t border-border pt-1">{footer}</div>}
       </div>
     </div>
   )

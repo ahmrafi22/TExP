@@ -253,6 +253,18 @@
   }
 }
 
+/* Ink-wash surfaces — app-side mirror of DialKit's --dial-surface ramp
+   (5 / 9 / 12% foreground), so non-DialKit UI shares the instrument texture. */
+@utility wash-5 {
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+@utility wash-9 {
+  background: color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+@utility wash-12 {
+  background: color-mix(in oklab, var(--foreground) 12%, transparent);
+}
+
 /* Neutral instrument scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
@@ -450,6 +462,8 @@ input[type="number"] {
   right: auto;
   bottom: auto;
   visibility: hidden;
+  /* dialkit default 9998 sits above Radix dialogs (z-50) — keep the dock under overlays */
+  z-index: 40;
 }
 
 .dialkit-timeline .dialkit-timeline-dock {

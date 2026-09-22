@@ -41,6 +41,8 @@ export default function TimelinePreview() {
   const selectedItemId = useTimelineUiStore((s) => s.selectedItemId)
   const setSelectedItem = useTimelineUiStore((s) => s.setSelectedItem)
   const setLiveItemPos = useTimelineUiStore((s) => s.setLiveItemPos)
+  const autoplayNonce = useTimelineUiStore((s) => s.autoplayNonce)
+  const lastAutoplayRef = useRef(0)
 
   // Live drag override — committed to the store once on pointerup so the GSAP
   // timeline isn't rebuilt on every pointermove.
@@ -118,6 +120,20 @@ export default function TimelinePreview() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision, canPlay, setCurrentTime, setIsPlaying])
+
+  // Preset-apply autoplay: the rebuild effect above runs first in this commit,
+  // so tlRef already points at the fresh timeline. Plays it from 0 once per
+  // request, mirroring how Text mode plays a preset the moment it's clicked.
+  useEffect(() => {
+    if (autoplayNonce === lastAutoplayRef.current) return
+    lastAutoplayRef.current = autoplayNonce
+    const tl = tlRef.current
+    if (!tl) return
+    tl.timeScale(speed)
+    tl.progress(0).play()
+    setIsPlaying(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoplayNonce])
 
   // ── Transport (drives the actual gsap instance) ──────────────────────────
   const play = useCallback(() => {
@@ -249,7 +265,11 @@ export default function TimelinePreview() {
             const clipText = item.animation.customStyles.overflowHidden || item.animation.customStyles.containerOverflow
             return (
               /* Positioning wrapper — owns layout placement so GSAP can own the
-                 animation transforms on the inner element without conflicts */
+                 animation transforms on the inner element without conflicts.
+                 width:max-content lets the box grow symmetrically around its
+                 center anchor; an absolutely-positioned element with only `left`
+                 set is shrink-to-fit against the right edge, which silently
+                 wrapped every wide centered line. */
               <div
                 key={item.id}
                 className="absolute max-w-full"
@@ -257,6 +277,7 @@ export default function TimelinePreview() {
                   left: `${50 + pos.xp}%`,
                   top: `${50 + pos.yp}%`,
                   transform: "translate(-50%, -50%)",
+                  width: "max-content",
                 }}
               >
                 <div
@@ -269,8 +290,14 @@ export default function TimelinePreview() {
                   title={item.label}
                 >
                   {/* Static clip layer — stays put while GSAP animates the
-                      element inside it, producing true masked reveals */}
-                  <div className={cn("w-fit", clipText && "overflow-hidden")}>
+                      element inside it, producing true masked reveals.
+                      The 0.1em padding/negative-margin pair widens the clip box
+                      just enough that ascenders and descenders are not shaved
+                      at rest, without changing the element's layout size. */}
+                  <div
+                    className={cn("w-fit", clipText && "overflow-hidden")}
+                    style={clipText ? { padding: "0.1em 0.06em", margin: "-0.1em -0.06em" } : undefined}
+                  >
                     <div
                       data-timeline-item-id={item.id}
                       ref={(el) => {

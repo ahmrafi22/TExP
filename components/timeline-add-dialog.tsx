@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Check, Wand2 } from "lucide-react"
@@ -27,7 +27,12 @@ function draftItem(): TimelineItem {
   }
 }
 
-export default function TimelineAddDialog() {
+interface TimelineAddDialogProps {
+  /** Optional replacement trigger (e.g. the sidebar icon rail). Defaults to the "Add Animation" button. */
+  trigger?: ReactNode
+}
+
+export default function TimelineAddDialog({ trigger }: TimelineAddDialogProps) {
   const [open, setOpen] = useState(false)
   const [item, setItem] = useState<TimelineItem>(draftItem)
 
@@ -81,46 +86,50 @@ export default function TimelineAddDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 text-xs">
-          <Plus className="h-3.5 w-3.5" />
-          Add Animation
-        </Button>
+        {trigger ?? (
+          <Button size="sm" className="h-8 gap-1.5 text-xs">
+            <Plus className="h-3.5 w-3.5" />
+            Add Animation
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar p-6">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold flex items-center gap-2">
-            <Plus className="h-4 w-4 text-ring" />
-            Add Animation to Timeline
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col gap-0 p-0">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold flex items-center gap-2">
+              <Plus className="h-4 w-4 text-ring" />
+              Add Animation to Timeline
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Quick preset chips */}
-        <div className="mt-2 mb-4">
-          <p className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Wand2 className="h-3 w-3" />
-            Quick presets
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {ANIMATION_PRESETS.slice(0, 12).map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => applyPreset(preset.id)}
-                className={cn(
-                  "px-2 py-1 rounded-md text-[10px] font-medium border transition-colors",
-                  item.label === preset.name
-                    ? "border-ring bg-primary/10 text-ring"
-                    : "border-border bg-muted/40 text-muted-foreground hover:text-foreground hover:border-muted-foreground/40",
-                )}
-              >
-                {preset.name}
-              </button>
-            ))}
+          {/* Quick preset chips */}
+          <div className="mt-2 mb-4">
+            <p className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Wand2 className="h-3 w-3" />
+              Quick presets
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {ANIMATION_PRESETS.slice(0, 12).map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => applyPreset(preset.id)}
+                  className={cn(
+                    "px-2 py-1 rounded-md text-[10px] font-medium border transition-colors",
+                    item.label === preset.name
+                      ? "border-ring bg-primary/10 text-ring"
+                      : "border-border bg-muted/40 text-muted-foreground hover:text-foreground hover:border-muted-foreground/40",
+                  )}
+                >
+                  {preset.name}
+                </button>
+              ))}
+            </div>
           </div>
+
+          <TimelineItemEditor item={item} labels={project.labels} onChange={(patch) => setItem((prev) => ({ ...prev, ...patch }))} />
         </div>
 
-        <TimelineItemEditor item={item} labels={project.labels} onChange={(patch) => setItem((prev) => ({ ...prev, ...patch }))} />
-
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-border mt-6">
+        <div className="shrink-0 flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-background">
           <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setOpen(false)}>
             Cancel
           </Button>

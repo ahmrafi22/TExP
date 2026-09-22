@@ -24,14 +24,13 @@ export default function TimelineSettingsPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-3">
-        {/* Playback settings */}
-        <div className="px-1 pt-3 pb-2 flex items-center gap-2">
-          <Settings2 className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.1em] text-muted-foreground">Playback</span>
-        </div>
-        <div className="flex flex-col gap-1.5 px-1">
+    <>
+      {/* Playback settings */}
+      <div className="px-1 pt-3 pb-2 flex items-center gap-2">
+        <Settings2 className="h-3 w-3 text-muted-foreground" />
+        <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Playback</span>
+      </div>
+      <div className="flex flex-col gap-1.5">
           <SliderField
             label="Repeat"
             value={project.repeat}
@@ -57,21 +56,21 @@ export default function TimelineSettingsPanel() {
         <div className="px-1 pt-4 pb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flag className="h-3 w-3 text-warning" />
-            <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.1em] text-muted-foreground">Labels</span>
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Labels</span>
           </div>
-          <span className="h-4 min-w-4 px-1 rounded-full bg-muted/60 border border-border/60 text-[9px] font-mono text-muted-foreground flex items-center justify-center tnum">
+          <span className="h-4 min-w-4 px-1 rounded-full wash-5 border border-border/60 text-[10px] font-mono text-muted-foreground flex items-center justify-center tnum">
             {project.labels.length}
           </span>
         </div>
 
-        <div className="px-1">
+        <div>
           <div className="flex gap-1.5">
             <Input
               value={labelName}
               onChange={(e) => setLabelName(e.target.value)}
               placeholder={`Add label at ${currentTime.toFixed(2)}s`}
               onKeyDown={(e) => { if (e.key === "Enter") handleAddLabel() }}
-              className="h-8 text-xs bg-muted/40 border-border/80 focus-visible:ring-primary/40 flex-1"
+              className="h-8 text-xs wash-5 border-border/80 focus-visible:ring-primary/40 flex-1"
             />
             <Button
               onClick={handleAddLabel}
@@ -89,21 +88,21 @@ export default function TimelineSettingsPanel() {
               Labels are markers you can attach animations to via <span className="font-mono">At Label</span> positioning.
             </p>
           ) : (
-            <div className="mt-2 flex flex-col gap-0.5">
+            <div className="mt-2 flex flex-col gap-1.5">
               {project.labels.map((label) => (
-                <div key={label.id} className="group flex items-center gap-1.5 rounded-md px-1.5 h-8 hover:bg-muted/40 transition-colors">
+                <div key={label.id} className="group flex items-center gap-1.5 rounded-md px-1.5 h-8 wash-5 hover:wash-9 transition-colors duration-150">
                   <span className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-warning/30 border border-warning/70" aria-hidden />
                   <input
                     value={label.name}
                     onChange={(e) => updateLabel(label.id, { name: e.target.value })}
-                    className="flex-1 min-w-0 bg-transparent text-[11px] font-medium focus:outline-none text-foreground"
+                    className="flex-1 min-w-0 bg-transparent text-xs font-medium focus:outline-none text-foreground"
                   />
                   <input
                     type="number"
                     step={0.1}
                     value={label.time}
                     onChange={(e) => updateLabel(label.id, { time: Math.max(0, parseFloat(e.target.value) || 0) })}
-                    className="w-14 h-6 text-center font-mono text-[10px] bg-muted/40 border border-border/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 tnum [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-14 h-6 text-center font-mono text-[10px] wash-5 border border-border/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 tnum [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span className="text-[9px] font-mono text-muted-foreground/60 shrink-0">s</span>
                   <button
@@ -118,7 +117,6 @@ export default function TimelineSettingsPanel() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </>
   )
 }

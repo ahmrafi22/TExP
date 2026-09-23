@@ -49,13 +49,16 @@ export default function HistoryPanel() {
 
   return (
     <div className="flex flex-col h-full bg-card min-h-0">
-      {/* Slim header: title + count, undo/redo/clear */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 shrink-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-[11px] font-mono font-semibold uppercase tracking-[0.08em] text-foreground">History</h3>
-          <span className="px-1.5 py-0.5 rounded-md bg-muted/60 text-[9px] font-mono tnum text-muted-foreground">
-            {history.length}
-          </span>
+      <div className="flex items-center justify-between px-3.5 py-3 border-b border-border shrink-0">
+        <div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <h3 className="text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">History</h3>
+            <span className="px-1.5 py-0.5 rounded-md wash-5 border border-border/60 text-[9px] font-mono tnum text-muted-foreground">
+              {history.length}
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Jump between recorded edits</p>
         </div>
         <div className="flex items-center gap-0.5">
           <Button
@@ -63,7 +66,7 @@ export default function HistoryPanel() {
             size="sm"
             onClick={undo}
             disabled={!canUndo}
-            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:wash-9"
             title="Undo (Ctrl+Z)"
           >
             <Undo2 className="h-3.5 w-3.5" />
@@ -73,7 +76,7 @@ export default function HistoryPanel() {
             size="sm"
             onClick={redo}
             disabled={!canRedo}
-            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:wash-9"
             title="Redo (Ctrl+Y)"
           >
             <Redo2 className="h-3.5 w-3.5" />
@@ -83,7 +86,7 @@ export default function HistoryPanel() {
             variant="ghost"
             size="sm"
             onClick={clearHistory}
-            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             title="Clear history"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -92,7 +95,7 @@ export default function HistoryPanel() {
       </div>
 
       {/* Timeline list */}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-2 py-2">
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-3 py-3">
         {history.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground/60">
             <Clock className="h-5 w-5" />
@@ -117,7 +120,7 @@ export default function HistoryPanel() {
                       className={cn(
                         "absolute left-[10px] top-1/2 -translate-y-1/2 z-10 rounded-full transition-all",
                         isCurrent
-                          ? "h-[9px] w-[9px] bg-primary ring-[3px] ring-primary/20"
+                          ? "h-[9px] w-[9px] bg-foreground ring-[3px] ring-foreground/10"
                           : "h-[5px] w-[5px] bg-muted-foreground/40",
                       )}
                     />
@@ -126,23 +129,23 @@ export default function HistoryPanel() {
                       onClick={() => jumpToHistory(index)}
                       title={`Jump to “${entry.label}”`}
                       className={cn(
-                        "group w-full flex items-center gap-2 pl-8 pr-2 py-1.5 rounded-lg text-left cursor-pointer transition-all duration-150",
+                        "group w-full min-h-11 flex items-center gap-2 pl-8 pr-2 py-1.5 rounded-md border text-left cursor-pointer transition-colors duration-150",
                         isCurrent
-                          ? "bg-popover shadow-md ring-1 ring-primary/25"
-                          : "hover:bg-muted/50",
-                        isFuture && "opacity-45 hover:opacity-80",
+                          ? "border-muted-foreground/45 wash-12"
+                          : "border-transparent hover:border-border hover:wash-5",
+                        isFuture && "border-dashed text-muted-foreground",
                       )}
                     >
                       <Icon
                         className={cn(
                           "h-3.5 w-3.5 shrink-0 transition-colors",
-                          isCurrent ? "text-ring" : "text-muted-foreground/60 group-hover:text-muted-foreground",
+                          isCurrent ? "text-foreground" : "text-muted-foreground/60 group-hover:text-muted-foreground",
                         )}
                       />
                       <span className="flex-1 min-w-0 flex flex-col">
                         <span
                           className={cn(
-                            "text-[11px] truncate",
+                            "text-xs truncate",
                             isCurrent ? "font-semibold text-foreground" : "text-muted-foreground group-hover:text-foreground",
                           )}
                         >

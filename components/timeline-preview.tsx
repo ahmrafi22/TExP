@@ -266,18 +266,15 @@ export default function TimelinePreview() {
             return (
               /* Positioning wrapper — owns layout placement so GSAP can own the
                  animation transforms on the inner element without conflicts.
-                 width:max-content lets the box grow symmetrically around its
-                 center anchor; an absolutely-positioned element with only `left`
-                 set is shrink-to-fit against the right edge, which silently
-                 wrapped every wide centered line. */
+                 fit-content keeps short lines centered while the 90% cap lets
+                 longer text wrap before it reaches the artboard edge. */
               <div
                 key={item.id}
-                className="absolute max-w-full"
+                className="absolute w-fit max-w-[90%]"
                 style={{
                   left: `${50 + pos.xp}%`,
                   top: `${50 + pos.yp}%`,
                   transform: "translate(-50%, -50%)",
-                  width: "max-content",
                 }}
               >
                 <div
@@ -295,7 +292,7 @@ export default function TimelinePreview() {
                       just enough that ascenders and descenders are not shaved
                       at rest, without changing the element's layout size. */}
                   <div
-                    className={cn("w-fit", clipText && "overflow-hidden")}
+                    className={cn("w-fit max-w-full", clipText && "overflow-hidden")}
                     style={clipText ? { padding: "0.1em 0.06em", margin: "-0.1em -0.06em" } : undefined}
                   >
                     <div
@@ -304,7 +301,7 @@ export default function TimelinePreview() {
                         if (el) itemElsRef.current[item.id] = el
                         else delete itemElsRef.current[item.id]
                       }}
-                      className="timeline-item text-center max-w-full"
+                      className="timeline-item max-w-full whitespace-normal wrap-break-word text-center"
                       style={computeTextStyles(item.animation.customStyles)}
                     >
                       {!item.splitTextConfig.enabled && item.text}

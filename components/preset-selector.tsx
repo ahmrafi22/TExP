@@ -6,11 +6,16 @@ import { cn } from "@/lib/utils"
 import { usePlaygroundStore } from "@/store/use-playground-store"
 import { useShallow } from "zustand/react/shallow"
 import type { PreviewCanvasRef } from "@/components/preview-canvas"
-import { Play, Check } from "lucide-react"
+import { Play } from "lucide-react"
+import { motion } from "motion/react"
 
 interface PresetSelectorProps {
   canvasRef: RefObject<PreviewCanvasRef | null>
 }
+
+
+const categoryLabel = (category: string) =>
+  PRESET_CATEGORIES.find((item) => item.id === category)?.label ?? category
 
 export default function PresetSelector({ canvasRef }: PresetSelectorProps) {
   const [activeCategory, setActiveCategory] = useState<string>("all")
@@ -40,74 +45,84 @@ export default function PresetSelector({ canvasRef }: PresetSelectorProps) {
 
   return (
     <div className="space-y-3">
-      {/* Category filter */}
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setActiveCategory("all")}
-          className={cn(
-            "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
-            activeCategory === "all"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-          )}
-        >
-          All
-        </button>
-        {PRESET_CATEGORIES.map((cat) => (
+      <div className="grid grid-cols-3 gap-1 rounded-md border border-border p-1 wash-5" role="group" aria-label="Preset category filter">
           <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
+            onClick={() => setActiveCategory("all")}
+            aria-pressed={activeCategory === "all"}
             className={cn(
-              "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
-              activeCategory === cat.id
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              "relative isolate h-7 px-2 rounded-sm border border-transparent text-[10px] font-mono font-semibold uppercase tracking-[0.06em] transition-colors",
+              activeCategory === "all"
+                ? "text-foreground"
+                : "text-muted-foreground hover:wash-9 hover:text-foreground",
             )}
           >
-            {cat.label}
+            {activeCategory === "all" && (
+              <motion.span
+                layoutId="text-preset-category"
+                className="absolute inset-0 z-0 rounded-sm border border-muted-foreground/35 wash-12"
+                transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              />
+            )}
+            <span className="relative z-10">All {ANIMATION_PRESETS.length}</span>
           </button>
-        ))}
+          {PRESET_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              aria-pressed={activeCategory === cat.id}
+              className={cn(
+                "relative isolate h-7 px-2 rounded-sm border border-transparent text-[10px] font-medium transition-colors",
+                activeCategory === cat.id
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:wash-9 hover:text-foreground",
+              )}
+            >
+              {activeCategory === cat.id && (
+                <motion.span
+                  layoutId="text-preset-category"
+                  className="absolute inset-0 z-0 rounded-sm border border-muted-foreground/35 wash-12"
+                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                />
+              )}
+              <span className="relative z-10">{cat.label}</span>
+            </button>
+          ))}
       </div>
 
-      {/* Preset grid */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex items-center justify-between px-0.5">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          {activeCategory === "all" ? "All recipes" : categoryLabel(activeCategory)}
+        </span>
+        <span className="text-[10px] font-mono text-muted-foreground tnum">{filtered.length} shown</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-1.5">
         {filtered.map((preset) => {
           const isActive = activePresetId === preset.id
           return (
             <button
               key={preset.id}
               onClick={() => handleSelectPreset(preset.id)}
+              aria-pressed={isActive}
               className={cn(
-                "group relative text-left rounded-md border p-2.5 overflow-hidden transition-colors duration-150",
-                "hover:border-muted-foreground/40",
+                "group relative flex h-10 items-center overflow-hidden rounded-md border px-2.5 pr-10 text-left transition-colors duration-150",
                 isActive
-                  ? "border-ring bg-accent ring-1 ring-ring/40"
-                  : "border-border bg-card"
+                  ? "border-muted-foreground/55 wash-12 ring-1 ring-inset ring-border"
+                  : "border-border wash-5 hover:wash-9 hover:border-muted-foreground/50",
               )}
             >
-              {/* Live wire: the accent rule marks the selected preset only */}
-              <div
-                className={cn(
-                  "absolute inset-x-0 top-0 h-0.5 bg-primary transition-opacity",
-                  isActive ? "opacity-100" : "opacity-0 group-hover:opacity-30"
-                )}
-              />
-              <div className="flex items-start justify-between gap-1.5">
-                <p className={cn(
-                  "text-xs font-semibold leading-tight",
-                  isActive ? "text-foreground" : "text-foreground"
-                )}>
-                  {preset.name}
-                </p>
-                {isActive ? (
-                  <Check className="h-3 w-3 text-ring shrink-0 mt-0.5" />
-                ) : (
-                  <Play className="h-2.5 w-2.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 shrink-0 mt-0.5 transition-colors" />
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug line-clamp-2">
-                {preset.description}
-              </p>
+
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-semibold leading-tight text-foreground">{preset.name}</span>
+                <span className="mt-0.5 block truncate text-[10px] leading-tight text-muted-foreground">
+                  {preset.description}
+                </span>
+              </span>
+              {isActive && (
+                <span className="absolute right-2 flex h-6 w-6 items-center justify-center rounded-full border border-muted-foreground/40 text-foreground">
+                  <Play className="h-2.5 w-2.5 fill-current" />
+                </span>
+              )}
             </button>
           )
         })}

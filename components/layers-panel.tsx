@@ -49,39 +49,42 @@ export default function LayersPanel() {
 
   return (
     <div className="flex flex-col h-full bg-card">
-      {/* Header — single compact row */}
-      <div className="px-3 py-2 border-b border-border flex items-center justify-between shrink-0">
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
-          <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-          Layers
-        </span>
+      <div className="px-3.5 py-3 border-b border-border flex items-center justify-between shrink-0">
+        <div>
+          <span className="flex items-center gap-2 text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">
+            <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+            Scene Layers
+          </span>
+          <p className="mt-1 text-[11px] text-muted-foreground">Live structure and animation targets</p>
+        </div>
         {isAnimating && (
-          <Badge variant="outline" className="h-4 text-[9px] px-1 bg-primary/10 text-ring border-primary/30 gap-1 animate-pulse font-mono">
+          <Badge variant="outline" className="h-4 gap-1 border-primary/35 px-1 text-[9px] font-mono text-ring animate-pulse">
             <Activity className="h-2.5 w-2.5" />
             LIVE
           </Badge>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2.5 py-2.5 space-y-1.5 custom-scrollbar">
-        {/* Canvas + Background — two thin rows, no cards */}
-        <div className="flex items-center justify-between text-[10px] leading-none py-0.5">
-          <span className="flex items-center gap-1.5 font-medium text-foreground">
-            <Box className="h-3 w-3 text-muted-foreground" /> Canvas
-          </span>
-          <span className="font-mono text-muted-foreground tnum">1920 × 1080</span>
-        </div>
-        <div className="flex items-center justify-between text-[10px] leading-none py-0.5">
-          <span className="flex items-center gap-1.5 font-medium text-foreground">
-            <Image className="h-3 w-3 text-muted-foreground" /> Background
-          </span>
-          <span className="font-mono text-muted-foreground max-w-[120px] truncate" title={bgLabel}>
-            {bgLabel}
-          </span>
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 custom-scrollbar">
+        <div className="overflow-hidden rounded-md border border-border wash-5">
+          <div className="flex h-9 items-center justify-between border-b border-border/70 px-2.5 text-[10px]">
+            <span className="flex items-center gap-2 font-medium text-foreground">
+              <Box className="h-3.5 w-3.5 text-muted-foreground" /> Canvas
+            </span>
+            <span className="font-mono text-muted-foreground">Responsive</span>
+          </div>
+          <div className="flex h-9 items-center justify-between px-2.5 text-[10px]">
+            <span className="flex items-center gap-2 font-medium text-foreground">
+              <Image className="h-3.5 w-3.5 text-muted-foreground" /> Background
+            </span>
+            <span className="font-mono text-muted-foreground max-w-30 truncate" title={bgLabel}>
+              {bgLabel}
+            </span>
+          </div>
         </div>
 
         {/* Text Layer — the only card */}
-        <div className="rounded-lg border border-border bg-background p-2.5 space-y-2">
+        <div className="relative rounded-md border border-ring/45 p-3 space-y-2.5 overflow-hidden wash-5">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
               <Type className="h-3 w-3 text-muted-foreground" />
@@ -91,7 +94,7 @@ export default function LayersPanel() {
           </div>
 
           {/* The text itself */}
-          <p className="font-sans text-[12px] font-semibold text-foreground leading-snug break-words px-2 py-1.5 rounded bg-muted/40 border border-border/50">
+          <p className="font-sans text-[12px] font-semibold text-foreground leading-snug break-words px-2.5 py-2 rounded-md wash-5 border border-border/70">
             “{text || "…"}”
           </p>
 
@@ -104,14 +107,14 @@ export default function LayersPanel() {
               {animationConfig.customStyles.fontWeight}
             </span>
             {splitTextConfig.enabled && (
-              <span className="bg-primary/10 border border-primary/30 px-1.5 py-px rounded text-ring">
+              <span className="rounded border border-primary/35 px-1.5 py-px text-ring">
                 split: {splitTextConfig.type}
               </span>
             )}
           </div>
 
           {/* Animation summary */}
-          <div className="rounded-md bg-muted/25 border border-border/50 px-2 py-1.5 space-y-1">
+          <div className="rounded-md wash-5 border border-border/70 px-2.5 py-2 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-[10px] font-semibold text-ring">
                 <Sparkles className="h-2.5 w-2.5" />

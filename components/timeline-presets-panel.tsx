@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Check, Play } from "lucide-react"
+import { Play } from "lucide-react"
+import { motion } from "motion/react"
 import { useTimelineProjectStore, useTimelineUiStore } from "@/store/use-timeline-store"
 import {
   TIMELINE_PRESETS,
@@ -11,12 +12,8 @@ import {
 } from "@/lib/timeline-presets"
 import { cn } from "@/lib/utils"
 
-/**
- * Sequence preset browser for the Timeline Creator. Mirrors the Text-mode
- * preset selector (category pills + 2-up card grid, accent wire, check/play
- * affordance) so both modes read as one product; the only addition is the
- * layer count, which is meaningful here because a preset is a whole sequence.
- */
+
+/** Sequence preset browser shared visually with Text-mode recipes. */
 export default function TimelinePresetsPanel() {
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [appliedId, setAppliedId] = useState<string | null>(null)
@@ -47,71 +44,84 @@ export default function TimelinePresetsPanel() {
 
   return (
     <div className="space-y-3">
-      {/* Category filter */}
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setActiveCategory("all")}
-          className={cn(
-            "px-2.5 h-6 inline-flex items-center rounded-md border text-[11px] font-medium transition-colors",
-            activeCategory === "all"
-              ? "border-ring bg-primary/10 text-ring"
-              : "border-border bg-muted/40 text-muted-foreground hover:text-foreground hover:border-muted-foreground/40",
-          )}
-        >
-          All
-        </button>
-        {TIMELINE_PRESET_CATEGORY_ORDER.map((cat) => (
+      <div className="grid grid-cols-3 gap-1 rounded-md border border-border p-1 wash-5" role="group" aria-label="Sequence preset category filter">
           <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => setActiveCategory("all")}
+            aria-pressed={activeCategory === "all"}
             className={cn(
-              "px-2.5 h-6 inline-flex items-center rounded-md border text-[11px] font-medium transition-colors",
-              activeCategory === cat
-                ? "border-ring bg-primary/10 text-ring"
-                : "border-border bg-muted/40 text-muted-foreground hover:text-foreground hover:border-muted-foreground/40",
+              "relative isolate h-7 px-2 rounded-sm border border-transparent text-[10px] font-mono font-semibold uppercase tracking-[0.06em] transition-colors",
+              activeCategory === "all"
+                ? "text-foreground"
+                : "text-muted-foreground hover:wash-9 hover:text-foreground",
             )}
           >
-            {TIMELINE_PRESET_CATEGORY_LABELS[cat]}
+            {activeCategory === "all" && (
+              <motion.span
+                layoutId="timeline-preset-category"
+                className="absolute inset-0 z-0 rounded-sm border border-muted-foreground/35 wash-12"
+                transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              />
+            )}
+            <span className="relative z-10">All {TIMELINE_PRESETS.length}</span>
           </button>
-        ))}
+          {TIMELINE_PRESET_CATEGORY_ORDER.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              aria-pressed={activeCategory === cat}
+              className={cn(
+                "relative isolate h-7 px-2 rounded-sm border border-transparent text-[10px] font-medium transition-colors",
+                activeCategory === cat
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:wash-9 hover:text-foreground",
+              )}
+            >
+              {activeCategory === cat && (
+                <motion.span
+                  layoutId="timeline-preset-category"
+                  className="absolute inset-0 z-0 rounded-sm border border-muted-foreground/35 wash-12"
+                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                />
+              )}
+              <span className="relative z-10">{TIMELINE_PRESET_CATEGORY_LABELS[cat]}</span>
+            </button>
+          ))}
       </div>
 
-      {/* Preset grid */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex items-center justify-between px-0.5">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          {activeCategory === "all" ? "All sequences" : TIMELINE_PRESET_CATEGORY_LABELS[activeCategory as keyof typeof TIMELINE_PRESET_CATEGORY_LABELS]}
+        </span>
+        <span className="text-[10px] font-mono text-muted-foreground tnum">{filtered.length} shown</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-1.5">
         {filtered.map((preset) => {
           const isApplied = appliedId === preset.id
           return (
             <button
               key={preset.id}
               onClick={() => apply(preset.id)}
+              aria-pressed={isApplied}
               className={cn(
-                "group relative text-left rounded-lg border p-2.5 overflow-hidden transition-colors duration-150",
+                "group relative flex h-10 items-center overflow-hidden rounded-md border px-2.5 pr-10 text-left transition-colors duration-150",
                 isApplied
-                  ? "border-ring bg-accent ring-1 ring-ring/40"
-                  : "border-border wash-5 hover:wash-9 hover:border-muted-foreground/40",
+                  ? "border-muted-foreground/55 wash-12 ring-1 ring-inset ring-border"
+                  : "border-border wash-5 hover:wash-9 hover:border-muted-foreground/50",
               )}
             >
-              {/* Live wire: the accent rule marks the applied preset only */}
-              <div
-                className={cn(
-                  "absolute inset-x-0 top-0 h-0.5 bg-primary transition-opacity",
-                  isApplied ? "opacity-100" : "opacity-0 group-hover:opacity-30",
-                )}
-              />
-              <div className="flex items-start justify-between gap-1.5">
-                <p className="text-xs font-semibold leading-tight text-foreground">{preset.name}</p>
-                {isApplied ? (
-                  <Check className="h-3 w-3 text-ring shrink-0 mt-0.5" />
-                ) : (
-                  <Play className="h-2.5 w-2.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 shrink-0 mt-0.5 transition-colors" />
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug line-clamp-2">
-                {preset.description}
-              </p>
-              <p className="text-[9px] font-mono uppercase tracking-[0.08em] text-muted-foreground/60 mt-1.5">
-                {preset.items.length} layers
-              </p>
+
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-semibold leading-tight text-foreground">{preset.name}</span>
+                <span className="mt-0.5 block truncate text-[10px] leading-tight text-muted-foreground">
+                  {preset.description}
+                </span>
+              </span>
+              {isApplied && (
+                <span className="absolute right-2 flex h-6 w-6 items-center justify-center rounded-full border border-muted-foreground/40 text-foreground">
+                  <Play className="h-2.5 w-2.5 fill-current" />
+                </span>
+              )}
             </button>
           )
         })}

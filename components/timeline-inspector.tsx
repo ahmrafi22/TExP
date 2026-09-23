@@ -20,13 +20,13 @@ export default function TimelineInspector() {
   if (!item) {
     return (
       <div className="flex flex-col h-full min-h-0">
-        <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+        <div className="px-3.5 py-3 border-b border-border flex items-center gap-2">
           <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Inspector</span>
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">Inspector</span>
         </div>
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="text-[11px] text-muted-foreground/70 text-center leading-relaxed">
-            Select a track or block on the timeline to edit its animation, split and timing.
+          <div className="max-w-52 text-xs text-muted-foreground/75 text-center leading-relaxed">
+            Select a track or a timeline block to edit its animation, split, and timing.
           </div>
         </div>
       </div>
@@ -35,12 +35,15 @@ export default function TimelineInspector() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground truncate">{item.label}</span>
+      <div className="px-3.5 py-3 border-b border-border flex items-center justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">Inspector</span>
+          </div>
+          <p className="mt-1 truncate text-[11px] text-muted-foreground">{item.label}</p>
         </div>
-        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setSelectedItem(null)} title="Deselect">
+        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setSelectedItem(null)} title="Deselect" aria-label="Deselect track">
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>

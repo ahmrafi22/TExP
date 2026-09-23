@@ -17,6 +17,7 @@ import HistoryPanel from "@/components/history-panel"
 import LayersPanel from "@/components/layers-panel"
 import ModeSwitcher from "@/components/mode-switcher"
 import TimelineCreator from "@/components/timeline-creator"
+import TimelineMobileWorkspace from "@/components/timeline-mobile-workspace"
 import OnboardingTour, { startTour } from "@/components/onboarding-tour"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -130,13 +131,13 @@ export default function GSAPPlayground() {
   // Left Sidebar Content (Figma Left Panel) — 32px vertical icon rail + panel
   const leftSidebarContent = (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-row flex-1 min-h-0 w-full">
-      <div id="tour-left-tabs" className="w-8 min-w-8 shrink-0 border-r border-border/60 bg-background/60 flex flex-col items-center gap-1 py-2">
-        <TabsList className="flex flex-col items-center gap-1 w-auto h-auto p-0 bg-transparent rounded-none">
+      <div id="tour-left-tabs" className="w-11 min-w-11 shrink-0 border-r border-border bg-background/70 flex flex-col items-center py-2.5">
+        <TabsList className="flex flex-col items-center gap-1.5 w-auto h-auto p-0 bg-transparent rounded-none">
           <TabsTrigger
             value="layers"
             title="Layers panel"
             aria-label="Layers"
-            className="h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
+            className="h-8 w-8 p-0 rounded-md border border-transparent cursor-pointer text-muted-foreground transition-colors duration-150 hover:wash-9 hover:text-foreground data-[state=active]:border-muted-foreground/40 data-[state=active]:wash-12 data-[state=active]:text-foreground"
           >
             <Layers className="h-3.5 w-3.5" />
           </TabsTrigger>
@@ -144,7 +145,7 @@ export default function GSAPPlayground() {
             value="presets"
             title="Animation presets"
             aria-label="Presets"
-            className="h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
+            className="h-8 w-8 p-0 rounded-md border border-transparent cursor-pointer text-muted-foreground transition-colors duration-150 hover:wash-9 hover:text-foreground data-[state=active]:border-muted-foreground/40 data-[state=active]:wash-12 data-[state=active]:text-foreground"
           >
             <Wand2 className="h-3.5 w-3.5" />
           </TabsTrigger>
@@ -152,7 +153,7 @@ export default function GSAPPlayground() {
             value="history"
             title="Action history"
             aria-label="History"
-            className="h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground bg-card/30 transition-all duration-150 hover:bg-muted/50 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
+            className="h-8 w-8 p-0 rounded-md border border-transparent cursor-pointer text-muted-foreground transition-colors duration-150 hover:wash-9 hover:text-foreground data-[state=active]:border-muted-foreground/40 data-[state=active]:wash-12 data-[state=active]:text-foreground"
           >
             <History className="h-3.5 w-3.5" />
           </TabsTrigger>
@@ -163,12 +164,18 @@ export default function GSAPPlayground() {
         <TabsContent value="layers" className="h-full m-0 data-[state=active]:flex flex-col">
           <LayersPanel />
         </TabsContent>
-        <TabsContent value="presets" className="h-full m-0 data-[state=active]:flex flex-col overflow-y-auto px-4 py-4">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-[11px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Animation Presets</h3>
+        <TabsContent value="presets" className="h-full m-0 data-[state=active]:flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-3.5 py-3 border-b border-border shrink-0">
+            <div>
+              <div className="flex items-center gap-2">
+                <Wand2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <h3 className="text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">Animation Presets</h3>
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Apply and preview a motion recipe</p>
             </div>
+            <span className="font-mono text-[9px] text-muted-foreground tnum">AUTO PLAY</span>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-3 py-3">
             <PresetSelector canvasRef={previewCanvasRef} />
           </div>
         </TabsContent>
@@ -266,7 +273,7 @@ export default function GSAPPlayground() {
         <div id="tour-header" className="flex items-center gap-3">
           <TexpLogo className="h-6 w-auto text-foreground" />
           <div className="h-4 w-px bg-border" />
-          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.6.7</span>
+          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono tnum text-muted-foreground">v0.7.0</span>
         </div>
 
         {/* Centered workspace mode switcher — true navbar center (desktop) */}
@@ -319,23 +326,37 @@ export default function GSAPPlayground() {
           {/* Mobile Settings Drawer */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0 lg:hidden">
+              <Button variant="outline" size="sm" className="h-9 w-9 p-0 lg:hidden" aria-label="Open workspace panels">
                 <Settings2 className="h-4 w-4" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[90vw] sm:w-[440px] p-0 flex flex-col">
-              <SheetHeader className="px-5 pt-4 pb-0">
+              <SheetHeader className="px-5 pt-4 pb-0 text-left">
                 <SheetTitle className="text-sm font-semibold flex items-center gap-2">
                   <Settings2 className="h-4 w-4" />
-                  Inspector &amp; Layers
+                  {activeMode === "text" ? "Text workspace" : "Timeline workspace"}
                 </SheetTitle>
               </SheetHeader>
-              {/* Mode switching lives here on smaller screens */}
               <div className="lg:hidden px-5 pt-3">
                 <ModeSwitcher />
               </div>
               <div className="flex-1 flex flex-col min-h-0">
-                {rightInspectorContent}
+                {activeMode === "text" ? (
+                  <Tabs defaultValue="inspector" className="flex min-h-0 flex-1 flex-col">
+                    <TabsList className="mx-4 mt-3 grid h-auto grid-cols-2 gap-1 rounded-lg border border-border bg-muted/25 p-1">
+                      <TabsTrigger value="library" className="h-9 rounded-md text-xs">Library</TabsTrigger>
+                      <TabsTrigger value="inspector" className="h-9 rounded-md text-xs">Inspector</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="library" className="mt-3 min-h-0 flex-1 overflow-hidden data-[state=active]:flex">
+                      {leftSidebarContent}
+                    </TabsContent>
+                    <TabsContent value="inspector" className="mt-0 min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col">
+                      {rightInspectorContent}
+                    </TabsContent>
+                  </Tabs>
+                ) : (
+                  <TimelineMobileWorkspace />
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -347,7 +368,7 @@ export default function GSAPPlayground() {
       {/* Figma 3-Column Workspace Layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left Sidebar — vertical icon rail + Layers / Presets / History panel */}
-        <div className="hidden lg:flex w-[300px] min-w-[300px] border-r border-border bg-card flex-row">
+        <div className="hidden lg:flex w-78 min-w-78 border-r border-border bg-card flex-row">
           {leftSidebarContent}
         </div>
 
@@ -381,7 +402,7 @@ export default function GSAPPlayground() {
               title="Reset animation properties"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              Reset
+              Reset motion
             </Button>
             <Button
               onClick={handleResetAll}
@@ -391,10 +412,10 @@ export default function GSAPPlayground() {
               title="Clear all settings"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Clear
+              Reset all
             </Button>
             <div className="h-4 w-px bg-border hidden sm:block" />
-            <span className="hidden sm:inline text-[11px] text-muted-foreground font-mono tnum">
+            <span className="hidden xl:inline text-[11px] text-muted-foreground font-mono tnum">
               {tweenType} · {ease} · {duration}s
             </span>
           </div>

@@ -155,6 +155,14 @@ const PreviewCanvas = forwardRef<PreviewCanvasRef>((_props, ref) => {
         } ${containerOverflow ? "overflow-hidden" : "overflow-visible"}`}
         style={isAutoBackground ? {} : getBackgroundStyle()}
       >
+          {!text && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
+              <div className="rounded-lg border border-dashed border-border/80 bg-card/35 px-5 py-4 text-center backdrop-blur-sm">
+                <p className="text-xs font-medium text-muted-foreground">Enter text above to preview</p>
+                <p className="mt-1 text-[10px] text-muted-foreground/60">Your animation will appear on this artboard</p>
+              </div>
+            </div>
+          )}
           {/* Overflow wrapper — clips animated text when overflowHidden is on */}
           <div
             style={{

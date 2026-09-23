@@ -39,19 +39,21 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Section header — same chrome as the inspector: py-2 + hairline rule */}
-      <div className="px-3 py-2 border-b border-border shrink-0 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Tracks</span>
-          <span className="h-4 min-w-4 px-1 rounded-full wash-5 border border-border/60 text-[10px] font-mono text-muted-foreground flex items-center justify-center tnum">
-            {items.length}
-          </span>
+      <div className="px-3.5 py-3 border-b border-border shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">Sequence Tracks</span>
+            <span className="h-4 min-w-4 px-1 rounded-md wash-5 border border-border/60 text-[9px] font-mono text-muted-foreground flex items-center justify-center tnum">
+              {items.length}
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Arrange layers and edit their timing</p>
         </div>
         {action}
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pt-2 pb-2">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 pt-3 pb-3">
         {ordered.length === 0 ? (
           <div className="mt-1 rounded-lg border border-dashed border-border/80 px-3 py-6 text-center">
             <p className="text-[11px] font-medium text-muted-foreground">No tracks yet</p>
@@ -61,7 +63,7 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5" role="list" aria-label="Animation tracks">
             {ordered.map((item, index) => {
               const isSelected = selectedItemId === item.id
               const isDragging = dragIndex === index
@@ -85,19 +87,25 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
                     setOverIndex(null)
                   }}
                   onClick={() => setSelectedItem(item.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      setSelectedItem(item.id)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  aria-label={`Select ${item.label}`}
                   className={cn(
-                    "group relative flex items-center gap-2 rounded-md pl-2 pr-1.5 h-[30px] cursor-pointer transition-colors duration-150 select-none overflow-hidden",
+                    "group relative flex items-center gap-2 rounded-md border pl-2 pr-1.5 h-10 cursor-pointer transition-colors duration-150 select-none overflow-hidden focus-visible:ring-2 focus-visible:ring-ring/35",
                     isDragging && "opacity-40",
-                    isOver && "before:absolute before:inset-x-1 before:-top-px before:h-0.5 before:rounded-full before:bg-primary",
+                    isOver && "before:absolute before:inset-x-1 before:-top-px before:h-0.5 before:rounded-full before:bg-foreground",
                     isSelected
-                      ? "wash-12"
-                      : "wash-5 hover:wash-9",
+                      ? "border-muted-foreground/50 wash-12"
+                      : "border-border wash-5 hover:wash-9 hover:border-muted-foreground/50",
                   )}
                 >
-                  {/* Selection wire — same lime rule used across the app */}
-                  {isSelected && (
-                    <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-r-full bg-primary" />
-                  )}
 
                   <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/30 group-hover:text-muted-foreground/60 cursor-grab active:cursor-grabbing transition-colors" />
 
@@ -111,8 +119,11 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
                   <span className="text-[10px] font-mono text-muted-foreground/50 tnum w-3.5 shrink-0">{index + 1}</span>
 
                   <div className="flex-1 min-w-0">
-                    <span className={cn("block text-xs font-medium truncate", isSelected ? "text-foreground" : "text-foreground/90")}>
+                    <span className={cn("block text-xs font-semibold truncate", isSelected ? "text-foreground" : "text-foreground/90")}>
                       {item.label}
+                    </span>
+                    <span className="block truncate text-[8px] font-mono uppercase tracking-[0.06em] text-muted-foreground/60">
+                      {item.animation.tweenType} · {item.animation.ease}
                     </span>
                   </div>
 
@@ -121,7 +132,7 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
                     <span className="text-[10px] font-mono text-muted-foreground/60 tnum transition-opacity group-hover:opacity-0">
                       {bounds.start.toFixed(2)}–{bounds.end.toFixed(2)}s
                     </span>
-                    <div className="absolute right-0 flex items-center gap-px opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute right-0 flex items-center gap-px opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -130,6 +141,7 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
                         }}
                         className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted/70 transition-colors"
                         title="Duplicate"
+                        aria-label={`Duplicate ${item.label}`}
                       >
                         <Copy className="h-3 w-3" />
                       </button>
@@ -141,6 +153,7 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
                         }}
                         className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
                         title="Delete"
+                        aria-label={`Delete ${item.label}`}
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -152,7 +165,7 @@ export default function TimelineTrackList({ action, footer }: { action?: ReactNo
           </div>
         )}
 
-        {footer && <div className="mt-3 border-t border-border pt-1">{footer}</div>}
+        {footer && <div className="mt-4 border-t border-border pt-1">{footer}</div>}
       </div>
     </div>
   )

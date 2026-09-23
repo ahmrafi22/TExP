@@ -44,15 +44,15 @@ export default function TimelineCreator() {
     return () => window.removeEventListener("keydown", onKey)
   }, [setSelectedItem])
 
-  const railTrigger = "h-7 w-7 p-0 rounded-md cursor-pointer text-muted-foreground wash-5 transition-all duration-150 hover:wash-9 hover:text-foreground data-[state=active]:bg-popover data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-primary/25"
+  const railTrigger = "h-8 w-8 p-0 rounded-md border border-transparent cursor-pointer text-muted-foreground transition-colors duration-150 hover:wash-9 hover:text-foreground data-[state=active]:border-muted-foreground/40 data-[state=active]:wash-12 data-[state=active]:text-foreground"
 
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* Left Sidebar — vertical icon rail + Tracks / Presets panels */}
-      <div className="hidden md:flex w-[280px] min-w-[280px] border-r border-border bg-card flex-row">
+      <div className="hidden md:flex w-78 min-w-78 border-r border-border bg-card flex-row">
         <Tabs value={panel} onValueChange={setPanel} className="flex flex-row flex-1 min-h-0 w-full">
-          <div className="w-8 min-w-8 shrink-0 border-r border-border/60 bg-background/60 flex flex-col items-center gap-1 py-2">
-            <TabsList className="flex flex-col items-center gap-1 w-auto h-auto p-0 bg-transparent rounded-none">
+          <div className="w-11 min-w-11 shrink-0 border-r border-border bg-background/70 flex flex-col items-center py-2.5">
+            <TabsList className="flex flex-col items-center gap-1.5 w-auto h-auto p-0 bg-transparent rounded-none">
               <TabsTrigger value="tracks" title="Tracks panel" aria-label="Tracks" className={railTrigger}>
                 <Layers className="h-3.5 w-3.5" />
               </TabsTrigger>
@@ -71,7 +71,7 @@ export default function TimelineCreator() {
                       <button
                         title="Add animation"
                         aria-label="Add animation"
-                        className="h-6 w-6 flex items-center justify-center rounded-md border border-border wash-5 text-muted-foreground hover:wash-9 hover:border-muted-foreground/40 hover:text-foreground transition-colors"
+                        className="h-7 w-7 flex items-center justify-center rounded-md border border-border wash-5 text-muted-foreground hover:wash-9 hover:border-muted-foreground/50 hover:text-foreground transition-colors"
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
@@ -82,11 +82,14 @@ export default function TimelineCreator() {
               />
             </TabsContent>
             <TabsContent value="presets" className="h-full m-0 data-[state=active]:flex flex-col overflow-hidden">
-              <div className="px-3 py-2 border-b border-border shrink-0 flex items-center gap-2">
-                <Wand2 className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-muted-foreground">Presets</span>
+              <div className="px-3.5 py-3 border-b border-border shrink-0">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-foreground">Sequence Presets</span>
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">Replaces the current sequence</p>
               </div>
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-4 py-4">
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-3 py-3">
                 <TimelinePresetsPanel />
               </div>
             </TabsContent>

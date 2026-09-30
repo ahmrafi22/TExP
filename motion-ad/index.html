@@ -1,0 +1,555 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>TExP — 15s motion ad (16:9, 1920×1080)</title>
+<!-- Brand faces: Archivo carries the UI voice, JetBrains Mono the instrument readouts. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@700&family=Bebas+Neue&family=Pacifico&family=Cormorant+Garamond:wght@700&family=Bungee&display=block" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   COLOUR — lifted verbatim from the app's dark theme in app/globals.css
+   (the ".dark" block). ONE acid-lime accent, obsidian surfaces, never
+   pure black. The blue→crimson premium ramp is NOT used on ad chrome —
+   it lives only inside the captured app canvases in a/.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root{
+  --font:'Archivo';
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+
+  --page:oklch(0.148 0.006 260);      /* --background  obsidian */
+  --surface:oklch(0.185 0.007 260);   /* --card       raised    */
+  --raised:oklch(0.215 0.008 260);     /* --popover    highest   */
+  --canvas:oklch(0.168 0.007 260);    /* --canvas-bg            */
+  --ink:oklch(0.95 0.004 140);         /* --foreground off-white */
+  --ink2:oklch(0.70 0.010 260);        /* --muted-foreground    */
+  --ink3:oklch(0.52 0.010 260);
+  --line:oklch(0.29 0.008 260);        /* --border              */
+  --line2:oklch(0.36 0.010 260);
+
+  --lime:oklch(0.87 0.20 128);         /* --primary   acid lime  */
+  --lime-ink:oklch(0.18 0.03 145);     /* ink on lime           */
+  --lime-wash:oklch(0.245 0.012 150);  /* --accent   hover wash */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--page)}
+body{font-family:var(--font),system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--page)}
+.abs{position:absolute}
+img{display:block}
+
+/* ── Backdrop: obsidian elevation, graphite pools, no coloured wash ──── */
+#bg{inset:0;background:
+  radial-gradient(1100px 760px at 14% 6%,  oklch(0.20 0.008 260 / .85), transparent 62%),
+  radial-gradient(980px 700px at 88% 96%, oklch(0.19 0.008 260 / .75), transparent 64%),
+  radial-gradient(760px 560px at 72% 8%,  oklch(0.175 0.006 260 / .70), transparent 66%),
+  var(--page)}
+/* Lime bloom = the app's "live / playing" state. Only rises while type moves. */
+#bloom{inset:0;opacity:0;background:
+  radial-gradient(820px 520px at 50% 48%, oklch(0.87 0.20 128 / .16), transparent 62%),
+  radial-gradient(1200px 700px at 50% 50%, oklch(0.87 0.20 128 / .07), transparent 70%)}
+#dots{inset:-40px;background-image:radial-gradient(oklch(0.95 0.004 140 / .11) 1.1px, transparent 1.2px);background-size:44px 44px}
+#vignette{inset:0;background:radial-gradient(1400px 900px at 50% 48%, transparent 54%, oklch(0.10 0.006 260 / .62) 100%)}
+/* ── Type system ─────────────────────────────────────────────────────── */
+#brand{top:52px;left:72px;display:flex;align-items:center;z-index:40}
+#brand img{height:46px;width:auto}
+.wordmark{font-weight:800;font-size:40px;letter-spacing:-.03em}
+
+/* Headlines: the accent word carries the ONE lime accent. */
+.hl{font-weight:800;letter-spacing:-.04em;line-height:1.04;z-index:40}
+.hl .w{display:inline-block;overflow:hidden;vertical-align:top;padding:0 .07em .12em;margin:0 -.04em}
+.hl .wi{display:inline-block;will-change:transform}
+.hl em{font-style:normal;color:var(--lime)}
+#hl1{left:72px;top:232px;width:790px;font-size:88px;text-align:left}
+#hl2{left:72px;top:64px;width:1000px;font-size:64px;text-align:left}
+#hl3{left:0;top:96px;width:1920px;font-size:60px;text-align:center}
+#hl4{left:0;top:150px;width:1920px;font-size:64px;text-align:center}
+#endHl{left:0;top:410px;width:1920px;font-size:104px;text-align:center}
+
+.sub{display:flex;z-index:40}
+#sub1{left:72px;top:474px}
+#sub2{left:72px;top:186px}
+#sub3{left:0;top:880px;width:1920px;justify-content:center}
+
+.chip{display:inline-flex;align-items:center;gap:12px;height:60px;padding:0 28px;border-radius:999px;font-weight:700;font-size:26px;letter-spacing:-.01em;white-space:nowrap}
+.chip.glass{background:var(--surface);color:var(--ink);border:1px solid var(--line);backdrop-filter:blur(14px)}
+.chip .dotl{width:10px;height:10px;border-radius:50%;background:var(--lime);flex:none}
+
+/* Proof pills (verifiable counts, no marketing fluff) */
+#statRow{top:836px;left:900px;width:948px;display:flex;justify-content:center;gap:18px;z-index:40}
+#statRow .st{padding:16px 26px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:center;min-width:180px}
+#statRow .st b{display:block;font-weight:800;font-size:38px;letter-spacing:-.02em;color:var(--ink)}
+#statRow .st span{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink2);margin-top:5px}
+
+/* ── App window — real 16:10 capture in a 16:10 box (never stretched) ── */
+#win{left:900px;top:168px;width:948px;border-radius:20px;background:var(--surface);border:1px solid var(--line);overflow:hidden;z-index:20;box-shadow:0 60px 120px -50px oklch(0.10 0.006 260 / .9)}
+#winBar{height:52px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--raised)}
+#winBar .d{width:11px;height:11px;border-radius:50%;background:oklch(0.95 0.004 140 / .22)}
+#winTitle{flex:1;text-align:center;font-family:var(--mono);font-size:16px;color:var(--ink2);padding-right:44px;white-space:nowrap;overflow:hidden}
+#winShot{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:50% 50%}
+.ring{width:170px;height:170px;margin:-85px 0 0 -85px;border-radius:18px;border:5px solid var(--lime);z-index:12}
+.dot{width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;background:oklch(0.95 0.004 140 / .3);z-index:13;border:3px solid var(--ink)}
+/* ── THE SHOWCASE: live text animations, rendered in-page with GSAP ──── */
+#stageText{left:0;top:0;width:1920px;height:1080px;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.demo{position:absolute;left:0;width:1920px;display:flex;flex-direction:column;align-items:center;gap:30px;visibility:hidden}
+.demo .line{font-weight:900;letter-spacing:-.045em;line-height:1;text-align:center;white-space:nowrap}
+.demo .lbl{font-family:var(--mono);font-size:20px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink2);display:flex;align-items:center;gap:14px}
+.demo .lbl i{display:block;width:40px;height:1px;background:currentColor;opacity:.55}
+.demo .ch{display:inline-block;will-change:transform,opacity,filter}
+
+/* ── Feature cards — three across, each shot at its own aspect ratio ── */
+#cards{left:0;top:0;width:1920px;height:1080px;z-index:25}
+.card{position:absolute;width:540px;border-radius:18px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.card .shot{position:relative;overflow:hidden;background:var(--canvas);border-bottom:1px solid var(--line)}
+.card .shot img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
+.card .cap{padding:20px 24px 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px}
+.card .cap .lb{font-weight:800;font-size:26px;letter-spacing:-.02em}
+.card .cap .lb span{display:block;font-weight:600;font-size:16px;color:var(--ink2);letter-spacing:0;margin-top:5px}
+.card .cap .mini{font-family:var(--mono);font-size:12px;color:var(--ink3);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+
+/* ── Preset wall ─────────────────────────────────────────────────────── */
+#wallWrap{inset:0;perspective:1900px;z-index:15}
+#wall{left:50%;top:52%;width:1834px;margin-left:-917px;display:grid;grid-template-columns:repeat(8,210px);gap:22px;transform-style:preserve-3d;align-content:center}
+#wall .t{width:210px;height:246px;border-radius:16px;background:var(--surface);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:18px}
+#wall .t .nm{font-weight:800;font-size:24px;line-height:1.1;letter-spacing:-.02em;color:var(--ink)}
+#wall .t .ct{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+#wall .t .ct i{width:6px;height:6px;border-radius:50%;background:var(--lime);flex:none}
+#wall .t.ft .aa{font-size:70px;line-height:1.05;font-weight:700;color:var(--ink)}
+#wall .t.img{padding:0}
+#wall .t.img img{width:100%;height:100%;object-fit:cover;object-position:50% 46%}
+#topFade{left:0;top:0;width:1920px;height:300px;z-index:35;background:linear-gradient(to bottom,var(--page) 0%,oklch(0.148 0.006 260 / .92) 44%,transparent 100%)}
+#botFade{left:0;bottom:0;width:1920px;height:260px;z-index:35;background:linear-gradient(to top,var(--page) 0%,oklch(0.148 0.006 260 / .9) 48%,transparent 100%)}
+
+/* ── End card ────────────────────────────────────────────────────────── */
+#wipe{left:960px;top:540px;width:3400px;height:3400px;margin-left:-1700px;margin-top:-1700px;border-radius:50%;background:
+  radial-gradient(1000px 680px at 16% 10%, oklch(0.20 0.008 260 / .9), transparent 62%),
+  radial-gradient(980px 680px at 86% 92%, oklch(0.19 0.008 260 / .8), transparent 62%),
+  radial-gradient(circle at 50% 48%, oklch(0.185 0.007 260) 0%, oklch(0.155 0.006 260) 56%, var(--page) 78%);z-index:60}
+#end{inset:0;z-index:61}
+#orbs{inset:0}
+/* Preset ring: every real preset name on a circular path, with repeats so the
+   ring reads as a continuous pill structure rather than sparse lozenges. */
+/* Pills are positioned by their CENTRE. The -50%/-50% centring is applied with
+   GSAP xPercent/yPercent (not a CSS transform), so the scale/rotate tweens below
+   compose with it instead of overwriting it. */
+.orb{position:absolute;padding:11px 17px;border-radius:999px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;gap:9px;opacity:0;white-space:nowrap;will-change:transform,opacity}
+.orb i{width:6px;height:6px;border-radius:50%;background:var(--lime);flex:none}
+.orb span{font-family:var(--mono);font-size:15px;color:var(--ink2);white-space:nowrap}
+/* Faint guide rings so the pill constellation reads as a deliberate circle. */
+#ringGuide{inset:0;z-index:1}
+#ringGuide i{position:absolute;border-radius:50%;border:1px dashed oklch(0.95 0.004 140 / .05);left:50%;top:50%;transform:translate(-50%,-50%)}
+/* Guide rings mirror the two pill ellipses exactly (rx*2 x ry*2 in JS below),
+   so the constellation reads as one deliberate system rather than scattered pills. */
+#rg1{width:1612px;height:972px;margin-left:-806px;margin-top:-486px}
+#rg2{width:1280px;height:744px;margin-left:-640px;margin-top:-372px}
+#endLogo{left:0;top:246px;width:1920px;display:flex;justify-content:center}
+#endLogo img{height:52px;width:auto}
+/* CTA button — the ONE acid-lime accent, ink on lime (as in the app) */
+/* The CTA button sits below the inner ring's bottom arc — the inner ellipse
+   ry=338 centred at 540 bottoms out at y=878, so 806 keeps it clear. */
+#endBtn{top:806px;left:0;width:1920px;display:flex;justify-content:center}
+#btn{height:104px;padding:0 54px;border-radius:22px;background:var(--lime);color:var(--lime-ink);display:flex;align-items:center;gap:18px;font-weight:800;font-size:38px;letter-spacing:-.02em;text-decoration:none;cursor:pointer;box-shadow:0 26px 60px -22px oklch(0.87 0.20 128 / .45)}
+#btnArrow{display:inline-block}
+/* Touch ring is INK-coloured: a lime ring is invisible on the lime button. */
+#tap{width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;border:6px solid var(--ink);z-index:70;left:0;top:0}
+#endFoot{top:962px;left:0;width:1920px;text-align:center;font-weight:600;font-size:24px;color:var(--ink2)}
+
+/* Fine film grain — dithers 8-bit gradient banding. */
+#grain{inset:0;z-index:90;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- Obsidian backdrop. The premium ramp lives only inside the app captures. -->
+  <div id="bg" class="abs"></div>
+  <div id="bloom" class="abs"></div>
+  <div id="dots" class="abs"></div>
+  <div id="vignette" class="abs"></div>
+
+  <div id="brand" class="abs"></div>
+
+  <!-- Beat A: hook — copy left, the real app window right -->
+  <div id="hl1" class="abs hl"></div>
+  <div id="sub1" class="abs sub"><div class="chip glass"><span class="dotl"></span><span></span></div></div>
+  <div id="statRow" class="abs"></div>
+  <div id="win" class="abs"><div id="winBar"><span class="d"></span><span class="d"></span><span class="d"></span><div id="winTitle"></div></div><img id="winShot" alt=""></div>
+  <div id="ring" class="abs ring"></div>
+  <div id="dot" class="abs dot"></div>
+
+  <!-- Beat B: the preset wall -->
+  <div id="wallWrap" class="abs"><div id="wall" class="abs"></div></div>
+  <div id="topFade" class="abs"></div>
+  <div id="botFade" class="abs"></div>
+  <div id="hl2" class="abs hl"></div>
+  <div id="sub2" class="abs sub"><div class="chip glass"><span></span></div></div>
+
+  <!-- Beat C: LIVE text animations — real per-char DOM driven by GSAP -->
+  <div id="stageText" class="abs">
+    <div class="demo" id="d1">
+      <div class="line" id="d1t" style="font-size:200px"></div>
+      <div class="lbl"><i></i><span>Elastic Pop</span><i></i></div>
+    </div>
+    <div class="demo" id="d2">
+      <div class="line" id="d2t" style="font-size:176px"></div>
+      <div class="lbl"><i></i><span>Blur Scale</span><i></i></div>
+    </div>
+    <div class="demo" id="d3">
+      <div class="line" id="d3t" style="font-size:184px"></div>
+      <div class="lbl"><i></i><span>Wave · per char</span><i></i></div>
+    </div>
+  </div>
+  <div id="hl3" class="abs hl"></div>
+  <div id="sub3" class="abs sub"><div class="chip glass"><span class="dotl"></span><span></span></div></div>
+
+  <!-- Beat D: three product surfaces, side by side -->
+  <div id="hl4" class="abs hl"></div>
+  <div id="cards" class="abs"></div>
+
+  <!-- End card -->
+  <div id="wipe" class="abs"></div>
+  <div id="end" class="abs">
+    <div id="ringGuide" class="abs"><i id="rg1"></i><i id="rg2"></i></div>
+    <div id="orbs"></div>
+    <div id="endLogo" class="abs"></div>
+    <div id="endHl" class="abs hl"></div>
+    <div id="endBtn" class="abs"><a id="btn" href="https://github.com/ahmrafi22/TExP" target="_blank" rel="noopener"><span id="btnLabel"></span> <span id="btnArrow">→</span></a></div>
+    <div id="endFoot" class="abs"></div>
+    <div id="tap" class="abs"></div>
+  </div>
+
+  <div id="grain" class="abs"></div>
+</div>
+
+<script src="gsap.min.js"></script>
+<script>
+// =====================================================================
+// CONFIG — every brand- and product-specific value lives here.
+// Facts on screen are verifiable in the TExP repo: 27 presets (lib/presets.ts),
+// 71 fonts (lib/fonts.ts), char/word/line splitting (types/animation.ts),
+// React-Vue-Vanilla x JS/TS export (utils/code-generator.ts).
+// No version numbers appear anywhere in this ad.
+// =====================================================================
+const CONFIG = {
+  brand: 'TExP',
+  logo: 'a/logo-white.svg',
+  winTitle: 'TExP — Text Animation',
+
+  // Beat A (0 – 2.9s): hook — copy left, product right
+  hook: 'Animate text\n*without code.*',
+  sub1: 'GSAP text animation, in the browser',
+  stats: [['27', 'Presets'], ['71', 'Fonts'], ['3', 'Export langs']],
+  screen: 'a/hero-app.jpg',     // 16:10 (3840x2400) — shown in a 16:10 box
+  screenDrift: -24,
+  // The Play button inside the framed capture (window at top 168, bar 52 tall).
+  tap: { x: 1286, y: 767 },
+
+  // Beat B (2.9 – 6.2s): the preset library
+  wallHl: '27 presets. *One click.*',
+  sub2: 'Entrance · Emphasis · 3D · Text · Creative',
+  wallShot: 'a/split-canvas.jpg',
+
+  // Beat C (6.2 – 10.6s): LIVE text animations (rendered here, not screenshotted)
+  showcaseHl: 'Real type in *real motion.*',
+  sub3: 'Split per character, word or line',
+  demos: [
+    { sel: '#d1', text: 'POP',   anim: 'elastic', label: 'Elastic Pop' },
+    { sel: '#d2', text: 'FOCUS', anim: 'blur',    label: 'Blur Scale' },
+    { sel: '#d3', text: 'WAVES', anim: 'wave',    label: 'Wave · per char' },
+  ],
+
+  // Beat D (10.6 – 13.0s): the three product surfaces
+  cardsHl: 'Then ship it.',
+  cards: [
+    { img: 'a/split-canvas.jpg', lb: 'Split text',    sub: 'Per char, word or line', mini: 'ENGINE' },
+    { img: 'a/timeline.jpg',     lb: 'Timeline mode', sub: 'Sequence many texts',    mini: 'SEQUENCER' },
+    { img: 'a/code-dialog.jpg',  lb: 'Export',        sub: 'React · Vue · Vanilla',  mini: 'CODEGEN' },
+  ],
+
+  // End card (13.0 – 15s)
+  cta: {
+    headline: 'Make words *move.*',
+    button: 'Get TExP',
+    foot: 'github.com/ahmrafi22/TExP',
+  },
+}
+
+// The real preset library — names + categories exactly as in lib/presets.ts.
+const PRESETS = [
+  ['Bounce In','Entrance'],['Slide Up','Entrance'],['Drop In','Entrance'],['Elastic Pop','Entrance'],
+  ['Zoom Rotate','Entrance'],['Cinematic','Entrance'],['Pop Scatter','Entrance'],['3D Flip','3D'],
+  ['Unfold','3D'],['Wave','Emphasis'],['Swing In','Emphasis'],['Blur Scale','Emphasis'],
+  ['Typewriter','Text'],['Matrix','Text'],['Glitch','Creative'],['Whip','Creative'],['Scatter','Creative'],
+  ['Gentle Rise','Entrance'],['Cascade','Entrance'],['Silk Slide','Entrance'],['Focus In','Emphasis'],
+  ['Spring Up','Entrance'],['Fade Scale','Entrance'],['Magnetic','Creative'],['Reveal Up','Text'],
+  ['Spiral In','3D'],['Curtain','Text']
+]
+const FONTS = [
+  ['Playfair Display','Playfair Display'],['Space Grotesk','Space Grotesk'],['Bebas Neue','Bebas Neue'],
+  ['Pacifico','Pacifico'],['Cormorant Garamond','Cormorant Garamond'],['Bungee','Bungee'],
+]
+// ---------- helpers ----------
+const $ = s => document.querySelector(s)
+const $$ = s => [...document.querySelectorAll(s)]
+
+// Headline markup: *word* gets the ONE lime accent, \n forces a line break.
+const words = s => {
+  let inAccent = false
+  return s.split('\n').map(line => line.split(' ').filter(Boolean).map(w => {
+    const opens = w.startsWith('*'), closes = w.endsWith('*') && w.length > 1
+    const text = w.replace(/^\*|\*$/g, '')
+    const accent = inAccent || opens
+    inAccent = accent && !closes
+    return `<span class="w"><span class="wi">${accent ? `<em>${text}</em>` : text}</span></span>`
+  }).join(' ')).join('<br>')
+}
+
+// Split a string into real per-character spans — the same DOM idea the app's
+// split-text engine uses, so the showcase is genuine type animation.
+const chars = (el, text) => {
+  el.innerHTML = [...text].map(c =>
+    c === ' ' ? '<span class="ch">&nbsp;</span>' : `<span class="ch">${c}</span>`
+  ).join('')
+  return [...el.querySelectorAll('.ch')]
+}
+
+// Labelled placeholder fallback — the ad previews even if a file is missing.
+const ph = (label, i = 0, w = 400, h = 500) => {
+  const hue = (i * 47) % 360
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue},28%,42%)"/><stop offset="1" stop-color="hsl(${(hue + 40) % 360},24%,26%)"/></linearGradient></defs>
+    <rect width="100%" height="100%" fill="url(#g)"/>
+    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="${Math.round(w / 12)}" fill="rgba(255,255,255,.4)">${label}</text></svg>`
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+}
+const setImg = (el, src, label, i, w, h) => {
+  el.onerror = () => { el.onerror = null; el.src = ph(label, i, w, h) }
+  el.src = src || ph(label, i, w, h)
+}
+const imgTag = (src, label, i, w, h) => `<img data-src="${src || ''}" data-label="${label}" data-i="${i}" data-w="${w}" data-h="${h}" alt="">`
+const hydrate = root => root.querySelectorAll('img[data-label]').forEach(el =>
+  setImg(el, el.dataset.src, el.dataset.label, +el.dataset.i, +el.dataset.w, +el.dataset.h))
+const brandMark = src => src ? `<img src="${src}" alt="">` : `<span class="wordmark">${CONFIG.brand}</span>`
+
+// ---------- build DOM ----------
+$('#brand').innerHTML = brandMark(CONFIG.logo)
+$('#endLogo').innerHTML = brandMark(CONFIG.logo)
+$('#winTitle').textContent = CONFIG.winTitle
+;['#hl1', '#hl2', '#hl3', '#hl4', '#endHl'].forEach((s, i) =>
+  $(s).innerHTML = words([CONFIG.hook, CONFIG.wallHl, CONFIG.showcaseHl, CONFIG.cardsHl, CONFIG.cta.headline][i]))
+$('#sub1 .chip span:last-child').textContent = CONFIG.sub1
+$('#sub2 .chip span:last-child').textContent = CONFIG.sub2
+$('#sub3 .chip span:last-child').textContent = CONFIG.sub3
+$('#btnLabel').textContent = CONFIG.cta.button
+$('#endFoot').textContent = CONFIG.cta.foot
+setImg($('#winShot'), CONFIG.screen, 'App screenshot', 1, 948, 592)
+$('#statRow').innerHTML = CONFIG.stats
+  .map(([n, l]) => `<div class="st"><b>${n}</b><span>${l}</span></div>`).join('')
+
+// Live text demos — real per-character DOM, animated by GSAP in the timeline.
+CONFIG.demos.forEach(d => chars($(d.sel + 't'), d.text))
+
+// Preset wall: real preset names, real font samples, the split-text shot centred.
+const wallTiles = (() => {
+  const tiles = []
+  let pi = 0, fi = 0
+  for (let i = 0; i < 48; i++) {
+    if (i === 26) { tiles.push({ type: 'img' }); continue }
+    if (i % 6 === 3) { const [fam, label] = FONTS[fi++ % FONTS.length]; tiles.push({ type: 'font', fam, label }); continue }
+    const [name, cat] = PRESETS[pi++ % PRESETS.length]
+    tiles.push({ type: 'preset', name, cat })
+  }
+  return tiles
+})()
+$('#wall').innerHTML = wallTiles.map(t => {
+  if (t.type === 'img') return `<div class="t img">${imgTag(CONFIG.wallShot, 'Split text', 8, 210, 246)}</div>`
+  if (t.type === 'font') return `<div class="t ft"><div class="aa" style="font-family:'${t.fam}'">Aa</div><div class="ct"><i></i>${t.label}</div></div>`
+  return `<div class="t"><div class="nm">${t.name}</div><div class="ct"><i></i>${t.cat}</div></div>`
+}).join('')
+
+// Feature cards — three across, each .shot locked to its image's real aspect ratio.
+const CARD_W = 540, CARD_GAP = 40, CARD_X = (1920 - (CARD_W * 3 + CARD_GAP * 2)) / 2
+$('#cards').innerHTML = CONFIG.cards.map((c, i) =>
+  `<div class="card" id="card${i}" style="left:${CARD_X + i * (CARD_W + CARD_GAP)}px">` +
+  `<div class="shot" style="aspect-ratio:16/10">${imgTag(c.img, c.lb + ' shot', i + 10, 540, 338)}</div>` +
+  `<div class="cap"><div class="lb">${c.lb}<span>${c.sub}</span></div><div class="mini">${c.mini}</div></div>` +
+  `</div>`).join('')
+
+// End-card constellation — ALL 27 real preset names laid on two elliptical
+// rings, with duplicates so each ring reads as a continuous pill structure
+// rather than a few sparse lozenges.
+//
+// The rings are deliberately wide and flat, and any candidate position that
+// would land on the logo / headline / CTA / URL is SKIPPED rather than moved,
+// so the type always stays legible. Skipping is what creates the natural arc
+// gaps top-centre and bottom-centre that frame the message.
+const RINGS = [
+  { rx: 806, ry: 486, slots: 34, start: -90 },   // outer
+  { rx: 640, ry: 372, slots: 22, start: -78 },   // inner
+]
+// Conservative pill half-extents (the longest name is "Pop Scatter").
+const PILL_HW = 96, PILL_HH = 26
+// Keep-out boxes: logo, headline, CTA button, URL line.
+const KEEP_OUT = [
+  { x0: 810, y0: 210, x1: 1110, y1: 330 },   // logo
+  { x0: 430, y0: 380, x1: 1490, y1: 560 },   // headline
+  { x0: 750, y0: 780, x1: 1170, y1: 930 },   // CTA button
+  { x0: 730, y0: 946, x1: 1190, y1: 1010 },  // URL (widened: 26px of clearance)
+]
+const collides = (x, y) => KEEP_OUT.some(b =>
+  x + PILL_HW > b.x0 && x - PILL_HW < b.x1 && y + PILL_HH > b.y0 && y - PILL_HH < b.y1)
+
+// Fill each ring clockwise from the top, dropping slots that would collide,
+// and keep cycling the real preset library so names repeat and fill the arc.
+const orbData = []
+RINGS.forEach(({ rx, ry, slots, start }) => {
+  for (let i = 0; i < slots; i++) {
+    const a = (start + (360 / slots) * i) * Math.PI / 180
+    const x = 960 + rx * Math.cos(a)
+    const y = 540 + ry * Math.sin(a)
+    if (collides(x, y)) continue
+    orbData.push({ x, y, r: (i % 2 ? 1 : -1) * 2.5, name: PRESETS[orbData.length % PRESETS.length][0] })
+  }
+})
+$('#orbs').innerHTML = orbData.map((o, i) =>
+  `<div class="orb" id="orb${i}" style="left:${o.x.toFixed(1)}px;top:${o.y.toFixed(1)}px"><i></i><span>${o.name}</span></div>`).join('')
+
+hydrate(document)
+// ---------- timeline ----------
+const TAP = CONFIG.tap
+gsap.defaults({ ease: 'power3.out' })
+const tl = gsap.timeline({ paused: true })
+const wordsIn = (sel, at, stagger = 0.07, dur = 0.8) =>
+  tl.fromTo(`${sel} .wi`, { yPercent: 118, rotate: 5 }, { yPercent: 0, rotate: 0, duration: dur, ease: 'expo.out', stagger }, at)
+const wordsOut = (sel, at) =>
+  tl.to(`${sel} .wi`, { yPercent: -118, rotate: -3, duration: 0.5, ease: 'power3.in', stagger: 0.04 }, at)
+
+const demoChars = d => [...$(d.sel).querySelectorAll('.ch')]
+const demoLabel = d => $(d.sel).querySelector('.lbl')
+
+// initial states — NOTE: #stageText and #cards are PARENT layers of the demos and
+// cards. Fading them out here would hide their children too, so they are faded IN
+// at their own beats instead.
+gsap.set(['#hl2 .wi', '#hl3 .wi', '#hl4 .wi', '#endHl .wi'], { yPercent: 118 })
+gsap.set('#win', { x: 120, y: 40, autoAlpha: 0 })
+gsap.set('#ring', { left: TAP.x, top: TAP.y, autoAlpha: 0, scale: 1.25 })
+gsap.set('#dot', { left: TAP.x, top: TAP.y, autoAlpha: 0, scale: 0.4 })
+gsap.set('#wall', { rotateX: 24, rotateZ: -9, y: 60 })
+gsap.set('#wall .t', { autoAlpha: 0, z: -900, scale: 0.4 })
+gsap.set(['#topFade', '#botFade', '#sub2', '#sub3', '#brand'], { autoAlpha: 0 })
+gsap.set('#statRow', { autoAlpha: 0, y: 26 })
+gsap.set('#stageText', { autoAlpha: 0 })
+gsap.set('#cards', { autoAlpha: 0 })
+gsap.set('.demo', { autoAlpha: 0 })
+gsap.set('.card', { y: 70, autoAlpha: 0 })
+gsap.set('#wipe', { scale: 0 })
+gsap.set('#end', { autoAlpha: 0 })
+
+// ===== Beat A: hook — copy left, product right (0 – 2.9s) =====
+tl.fromTo('#brand', { autoAlpha: 0, y: -20 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0)
+tl.fromTo('#dots', { y: 0 }, { y: -160, duration: 15, ease: 'none' }, 0)
+wordsIn('#hl1', 0.1)
+tl.fromTo('#win', { x: 120, y: 40, autoAlpha: 0 }, { x: 0, y: 0, autoAlpha: 1, duration: 1.1, ease: 'expo.out' }, 0.2)
+tl.fromTo('#winShot', { y: 0 }, { y: CONFIG.screenDrift, duration: 1.5, ease: 'expo.inOut' }, 0.5)
+tl.fromTo('#sub1', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'back.out(1.8)' }, 1.15)
+tl.to('#statRow', { autoAlpha: 1, y: 0, duration: 0.55, ease: 'back.out(1.6)', stagger: 0.07 }, 1.45)
+tl.fromTo('#dot', { autoAlpha: 0, scale: 0.4 }, { autoAlpha: 1, scale: 1, duration: 0.14, ease: 'back.out(3)' }, 2.0)
+tl.to('#dot', { autoAlpha: 0, scale: 1.8, duration: 0.3 }, 2.14)
+tl.to('#ring', { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'back.out(2.2)' }, 2.06)
+
+// ===== Beat B: the preset wall (2.9 – 6.2s) =====
+tl.to('#ring', { autoAlpha: 0, duration: 0.15 }, 2.9)
+tl.to('#win', { x: 140, y: -30, autoAlpha: 0, duration: 0.8, ease: 'power3.in' }, 2.9)
+tl.to('#statRow', { autoAlpha: 0, y: -26, duration: 0.4, ease: 'power2.in' }, 2.9)
+wordsOut('#hl1', 2.85)
+tl.to('#sub1', { autoAlpha: 0, y: -20, duration: 0.3, ease: 'power2.in' }, 2.85)
+tl.to('#brand', { autoAlpha: 0, y: -20, duration: 0.3, ease: 'power2.in' }, 2.85)
+tl.set('#wall', { autoAlpha: 1 }, 3.1)
+tl.fromTo('#wall .t', { autoAlpha: 0, z: -900, scale: 0.4 },
+  { autoAlpha: 1, z: 0, scale: 1, duration: 1.0, ease: 'expo.out', stagger: { grid: [8, 6], from: 'center', amount: 0.8 } }, 3.2)
+tl.to('#wall', { y: -200, x: 120, rotateZ: -5, duration: 3.0, ease: 'sine.inOut' }, 3.2)
+tl.to(['#topFade', '#botFade'], { autoAlpha: 1, duration: 0.5 }, 3.0)
+wordsIn('#hl2', 3.35)
+tl.fromTo('#sub2', { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'back.out(1.8)' }, 3.95)
+// ===== Beat C: LIVE text animations (6.2 – 10.6s) =====
+// Three genuine text animations, rendered as per-character DOM and driven by GSAP.
+const runDemo = (d, at, dur) => {
+  const cs = demoChars(d), lbl = demoLabel(d)
+  tl.set(d.sel, { autoAlpha: 1 }, at)
+  tl.fromTo(lbl, { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power2.out' }, at + 0.1)
+  if (d.anim === 'elastic') {
+    tl.fromTo(cs, { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: dur * 0.7, ease: 'elastic.out(1, 0.42)', stagger: 0.07 }, at)
+  } else if (d.anim === 'blur') {
+    tl.fromTo(cs, { scale: 0.55, opacity: 0, filter: 'blur(28px)' },
+      { scale: 1, opacity: 1, filter: 'blur(0px)', duration: dur * 0.6, ease: 'power3.out', stagger: 0.05 }, at)
+  } else {
+    // Wave: letters rise in sequence, then roll through a continuous wave
+    tl.fromTo(cs, { yPercent: 130, opacity: 0 },
+      { yPercent: 0, opacity: 1, duration: dur * 0.45, ease: 'expo.out', stagger: 0.055 }, at)
+    tl.to(cs, { y: -48, duration: 0.5, ease: 'sine.inOut', stagger: 0.055, repeat: 1, yoyo: true }, at + dur * 0.5)
+  }
+  tl.to(cs, { autoAlpha: 0, y: -64, filter: 'blur(10px)', duration: 0.45, ease: 'power2.in', stagger: 0.03 }, at + dur - 0.45)
+  tl.to(lbl, { autoAlpha: 0, duration: 0.3 }, at + dur - 0.45)
+  tl.to(d.sel, { autoAlpha: 0, duration: 0.2 }, at + dur - 0.05)
+}
+
+wordsOut('#hl2', 6.15)
+tl.to('#sub2', { autoAlpha: 0, y: -20, duration: 0.3, ease: 'power2.in' }, 6.15)
+tl.to('#wall', { scale: 2.1, autoAlpha: 0, duration: 0.75, ease: 'power3.in' }, 6.1)
+tl.to(['#topFade', '#botFade'], { autoAlpha: 0, duration: 0.45 }, 6.5)
+wordsIn('#hl3', 6.3)
+tl.set('#stageText', { autoAlpha: 1 }, 6.3)
+tl.fromTo('#sub3', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'back.out(1.8)' }, 6.9)
+// Lime bloom = the app's "live / playing" state, rising while the type moves.
+tl.to('#bloom', { opacity: 1, duration: 0.8 }, 6.4)
+runDemo(CONFIG.demos[0], 6.75, 1.25)
+runDemo(CONFIG.demos[1], 8.0, 1.25)
+runDemo(CONFIG.demos[2], 9.25, 1.3)
+
+// ===== Beat D: three product surfaces, side by side (10.6 – 13.0s) =====
+wordsOut('#hl3', 10.5)
+tl.to('#sub3', { autoAlpha: 0, y: -22, duration: 0.3, ease: 'power2.in' }, 10.5)
+tl.to('#bloom', { opacity: 0, duration: 0.5 }, 10.5)
+wordsIn('#hl4', 10.7)
+tl.set('#cards', { autoAlpha: 1 }, 10.8)
+gsap.set('.card', { top: 330 })
+tl.to('.card', { autoAlpha: 1, y: 0, duration: 0.7, ease: 'expo.out', stagger: 0.12 }, 10.95)
+tl.to('.card', { y: (i) => -20 * (i + 1), duration: 1.6, ease: 'sine.inOut', stagger: 0.08 }, 11.7)
+
+// ===== End card (13.0 – 15s) =====
+tl.to('#wipe', { scale: 1, duration: 0.9, ease: 'expo.inOut' }, 13.0)
+tl.to(['#cards', '#hl4'], { y: -80, duration: 0.8, ease: 'power3.in' }, 12.95)
+tl.set('#end', { autoAlpha: 1 }, 13.55)
+tl.fromTo('#endLogo > *', { autoAlpha: 0, scale: 0.7, y: 22 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.7, ease: 'back.out(1.8)' }, 13.6)
+wordsIn('#endHl', 13.75, 0.08, 0.85)
+tl.fromTo('#btn', { autoAlpha: 0, y: 40, scale: 0.92 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }, 14.3)
+tl.fromTo('#endFoot', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, 14.5)
+// Guide rings fade up first so the pills read as filling a deliberate circle.
+tl.fromTo('#ringGuide', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, 13.5)
+// Pills bloom outward from the top of each ring, so the fills feel continuous.
+orbData.forEach((o, i) => {
+  const delay = 13.55 + (i / orbData.length) * 0.75
+  tl.fromTo(`#orb${i}`, { autoAlpha: 0, scale: 0.4, rotate: 0, xPercent: -50, yPercent: -50 },
+    { autoAlpha: 1, scale: 1, rotate: o.r, duration: 0.55, ease: 'back.out(2.2)' }, delay)
+  tl.to(`#orb${i}`, { y: i % 2 ? -14 : 14, duration: 1.15, ease: 'sine.inOut' }, 14.4)
+})
+// Tap lands on the CTA button's centre: 960 across, 812 + 104/2 = 864 down.
+tl.fromTo('#tap', { left: 960, top: 864, autoAlpha: 0, scale: 1.4 },
+  { autoAlpha: 1, scale: 0.85, duration: 0.3, ease: 'power2.out' }, 14.7)
+tl.to('#btn', { scale: 0.96, duration: 0.12, ease: 'power2.in' }, 14.9)
+tl.to('#btn', { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.45)' }, 15.02)
+tl.to('#tap', { scale: 1.8, autoAlpha: 0, duration: 0.5 }, 14.97)
+tl.fromTo('#btnArrow', { x: 0 }, { x: 10, duration: 0.3, yoyo: true, repeat: 1, ease: 'power2.inOut' }, 15.15)
+tl.to({}, { duration: 0.01 }, 15)
+
+// Render contract used by the motion-ad renderer — keep these three and the ?render guard.
+window.seek = t => { tl.seek(t, false); return true }
+window.DURATION = 15
+window.ready = Promise.all([document.fonts.ready, ...$$('img').map(i => i.decode().catch(() => {}))])
+if (!/render/.test(location.search)) { tl.play(); tl.eventCallback('onComplete', () => setTimeout(() => tl.restart(), 800)) }
+</script>
+</body>
+</html>
+

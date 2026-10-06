@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TExP — Launch Film</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Bebas+Neue&family=Space+Grotesk:wght@700&family=Pacifico&family=Anton&family=Lobster&family=Abril+Fatface&family=Righteous&family=Permanent+Marker&family=Press+Start+2P&family=Bungee&family=Caveat:wght@700&family=DM+Serif+Display&family=Oswald:wght@700&family=Fredoka:wght@700&family=Silkscreen&family=Black+Ops+One&family=Great+Vibes&family=Comfortaa:wght@700&family=Alfa+Slab+One&family=Cormorant+Garamond:wght@700&family=Sora:wght@800&family=Fira+Code:wght@700&family=Lexend:wght@800&display=block" rel="stylesheet">
+<link rel="stylesheet" href="src/film.css">
+</head>
+<body>
+<div id="stage">
+
+  <!-- ============ CAMERA over the two authentic workspaces ============ -->
+  <div id="cam" class="abs fill">
+    <div id="tilt" class="abs fill">
+
+      <!-- Text Animation workspace (100% Authentic TExP UI Base Plates) -->
+      <div id="world" class="abs world">
+        <img id="plateText" src="ref/clean-text-mode.png" class="abs fill ui-plate" />
+        <div id="presetHighlight" class="abs"></div>
+        <img id="plate3dFlip" src="ref/clean-3dflip-active.png" class="abs fill ui-plate" style="opacity: 0;" />
+        <img id="plateGlitch" src="ref/clean-glitch-active.png" class="abs fill ui-plate" style="opacity: 0;" />
+
+        <!-- Dynamic Canvas Overlay (center artboard) -->
+        <div id="canvasOverlay" class="abs" style="left: 312px; top: 52px; width: 1268px; height: 1028px; pointer-events: none; z-index: 20;">
+          <!-- Top text input live text -->
+          <div id="tinLiveText" class="abs mono" style="left: 634px; top: 27px; transform: translate(-50%, -50%); font-size: 13px; font-weight: 500; color: #f2f4f0; pointer-events: none;">
+            <span id="tinStatic">Static text.</span>
+            <span id="tinMove" style="position: absolute; left: 0; top: 0; opacity: 0; white-space: nowrap;">Make it move.</span>
+          </div>
+
+          <!-- Actor text in center of canvas -->
+          <div id="takes1" class="takes">
+            <div class="macro-box" id="macroBox" style="position: absolute; left: 634px; top: 480px; transform: translate(-50%, -50%);">
+              <div class="actor-text" id="textStatic"></div>
+              <div class="actor-text" id="textMove" style="position:absolute; inset:0; opacity:0;"></div>
+              <div class="select-wash" id="selWash"></div>
+              <div class="caret" id="caret1"></div>
+            </div>
+          </div>
+
+          <!-- Transport live mono badge overlay -->
+          <div id="transLiveBadge" class="abs mono" style="left: 775px; top: 968px; font-size: 11px; color: #8b92a2; letter-spacing: 0.02em; pointer-events: none;">to · power1.out · 1s</div>
+        </div>
+
+        <!-- Inspector Curve Editor & Slider Dynamic Overlay (for Beat 5 zoom) -->
+        <div id="inspOverlay" class="abs" style="left: 1580px; top: 52px; width: 340px; height: 1028px; z-index: 25; pointer-events: none; opacity: 0;">
+          <div class="curvebox" id="curvebox" style="position: absolute; left: 17px; top: 192px; width: 306px; height: 223px; background: #1c1e21; border-radius: 8px; border: 1px solid #30343c; padding: 0; box-sizing: border-box; overflow: visible;">
+            <svg viewBox="0 0 306 223" id="curveSvg" style="width: 100%; height: 100%; overflow: visible;">
+              <defs>
+                <filter id="limeGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <g id="curveGrid" style="stroke: rgba(255,255,255,0.045); stroke-width: 1;">
+                <line x1="86.5" y1="20" x2="86.5" y2="200"/><line x1="153" y1="20" x2="153" y2="200"/><line x1="219.5" y1="20" x2="219.5" y2="200"/>
+                <line x1="20" y1="65" x2="286" y2="65"/><line x1="20" y1="110" x2="286" y2="110"/><line x1="20" y1="155" x2="286" y2="155"/>
+              </g>
+              <line x1="20" y1="200" x2="286" y2="20" class="diag" style="stroke: rgba(255,255,255,0.10); stroke-dasharray: 4 4; stroke-width: 1;"/>
+              <path id="curveGhost" style="fill: none; stroke: rgba(255,255,255,0.18); stroke-width: 1.5; stroke-dasharray: 3 4; opacity: 0;"/>
+              <line id="h1" class="hl" style="stroke: #bdf524; stroke-width: 1.5; opacity: 0.7;"/>
+              <line id="h2" class="hl" style="stroke: #bdf524; stroke-width: 1.5; opacity: 0.7;"/>
+              <path id="curvePath" class="cv" style="fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round;"/>
+              <circle id="p0" cx="20" cy="200" r="3.5" style="fill: #ffffff;"/>
+              <circle id="p3" cx="286" cy="20" r="3.5" style="fill: #ffffff;"/>
+              <circle id="c1ring" r="11" style="fill: none; stroke: #bdf524; stroke-width: 1.5; opacity: 0;"/>
+              <circle id="c2ring" r="11" style="fill: none; stroke: #bdf524; stroke-width: 1.5; opacity: 0;"/>
+              <circle id="c1" r="5" class="hnd" style="fill: #bdf524; stroke: #121316; stroke-width: 2;"/>
+              <circle id="c2" r="5" class="hnd" style="fill: #bdf524; stroke: #121316; stroke-width: 2;"/>
+              <circle id="cdot" r="6" class="cdot" filter="url(#limeGlow)" style="fill: #bdf524; stroke: #ffffff; stroke-width: 2; opacity: 0;"/>
+            </svg>
+          </div>
+          <!-- Live Ease row overlay matching authentic plate -->
+          <div class="irow" style="position: absolute; left: 17px; top: 443px; width: 306px; height: 39px; background: #1c1e21; border: 1px solid #30343c; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 13px;">
+            <span style="color: #8b92a2;">Ease</span>
+            <span class="mono" id="easeVal" style="color: #f2f4f0; font-family: var(--font-mono); font-size: 12px;">0.25, 0.46, 0.45, 0.94</span>
+          </div>
+          <!-- Live Duration row overlay matching authentic plate -->
+          <div id="sl-duration" style="position: absolute; left: 17px; top: 534px; width: 306px; height: 38px; background: #1c1e21; border: 1px solid #30343c; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; overflow: hidden; position: relative;">
+            <div class="sl-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 35%; background: rgba(189,245,36,0.18); border-right: 2px solid #bdf524; pointer-events: none;"></div>
+            <span style="font-size: 13px; color: #8b92a2; z-index: 2;">Duration</span>
+            <em id="slDurVal" style="font-style: normal; font-family: var(--font-mono); font-size: 13px; color: #f2f4f0; z-index: 2;">1.0</em>
+          </div>
+        </div>
+
+        <div id="cursor1" class="cursor abs"></div>
+      </div>
+
+      <!-- Timeline Animation workspace (100% Authentic TExP UI Base Plate) -->
+      <div id="world2" class="abs world" style="opacity: 0; pointer-events: none;">
+        <img id="plateTimeline" src="ref/clean-timeline-mode.png" class="abs fill ui-plate" />
+
+        <!-- Preview canvas text overlay -->
+        <div id="tlCanvasOverlay" class="abs" style="left: 312px; top: 52px; width: 1268px; height: 758px; pointer-events: none; z-index: 20;">
+          <div class="actor-text" id="tlTextBounce" style="position: absolute; left: 634px; top: 380px; transform: translate(-50%, -50%); opacity: 0;"></div>
+          <div class="actor-text" id="tlTextSlide" style="position: absolute; left: 634px; top: 380px; transform: translate(-50%, -50%); opacity: 0;"></div>
+        </div>
+
+        <!-- Live lime playhead scrubbing over the sequencer ruler and lanes -->
+        <div id="playhead" class="playhead abs" style="left: 342px; top: 895px; height: 165px; z-index: 25;">
+          <span id="phLabel">0.00</span>
+        </div>
+
+        <!-- Export dialog -->
+        <div id="dim" class="abs dim fill"></div>
+        <div id="dialog" class="dialog abs" style="left: 50%; top: 50%; width: 780px; height: 620px; z-index: 85; position: absolute; transform: translate(-50%, -50%) scale(0.92); transform-origin: 50% 50%;">
+          <img id="modalVue" src="ref/modal-vue.png" class="abs fill" style="opacity: 0; border-radius: 12px; box-shadow: 0 30px 90px rgba(0,0,0,0.85);" />
+          <img id="modalReact" src="ref/modal-react.png" class="abs fill" style="opacity: 1; border-radius: 12px; box-shadow: 0 30px 90px rgba(0,0,0,0.85);" />
+          <div id="copiedPill" class="abs" style="left: 698px; top: 213px; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; background: #181a1f; border: 1px solid #bdf524; color: #bdf524; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 6px; opacity: 0; z-index: 30; pointer-events: none; box-shadow: 0 4px 16px rgba(189,245,36,0.35);">
+            <span style="font-size: 13px;">✓</span> Copied
+          </div>
+        </div>
+
+        <div id="cursor2" class="cursor abs"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ STANDALONE SCENES ============ -->
+  <div id="wheelScene" class="abs fill scene">
+    <div class="glow g1"></div>
+    <div id="wheelWrap" class="abs"><div id="wheel" class="abs"></div></div>
+    <div id="perform" class="abs">
+      <div id="perfText" class="perform-text"></div>
+      <div id="perfSub" class="perform-sub mono"></div>
+    </div>
+    <div id="wheelCount" class="abs mono"></div>
+    <div id="wheelCat" class="abs mono"></div>
+  </div>
+
+  <div id="splitScene" class="abs fill scene">
+    <div class="glow g2"></div>
+    <div id="splitCam" class="abs fill"><div id="splitRig" class="abs"></div></div>
+    <div id="splitLabels" class="abs fill"></div>
+  </div>
+
+  <div id="strip" class="abs"></div>
+
+  <div id="wallScene" class="abs fill scene">
+    <div id="wallCam" class="abs fill"><div id="wall" class="abs"></div></div>
+  </div>
+
+  <div id="endScene" class="abs fill scene">
+    <div class="glow g3"></div>
+    <div id="endRig">
+      <svg id="endLogo" viewBox="0 0 172 47"></svg>
+      <div id="endTag">Text animation, <em>without the guesswork.</em></div>
+      <div id="endCta"><div id="ctaBtn">Open TExP <span class="arr">→</span></div></div>
+      <div id="endUrl" class="mono">github.com/ahmrafi22/TExP</div>
+    </div>
+    <div id="endCursor" class="cursor abs" style="left: 0; top: 0;"></div>
+    <div id="ctaRing" class="abs"></div>
+  </div>
+
+  <!-- Title system: bottom-left, consistent through the film -->
+  <div id="scrim" class="abs"></div>
+  <div id="titles" class="abs fill"></div>
+</div>
+
+<script src="src/gsap.min.js"></script>
+<script src="src/CustomEase.min.js"></script>
+<script src="src/data.js"></script>
+<script src="src/film.js"></script>
+</body>
+</html>
